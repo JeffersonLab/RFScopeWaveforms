@@ -5,7 +5,7 @@ from typing import Dict, Tuple
 import numpy as np
 import mariadb
 from numpy.core.multiarray import ndarray
-from scipy.signal import welch
+from scipy.signal import periodogram
 
 
 class Scan:
@@ -70,10 +70,13 @@ class Scan:
             # Time is reflected in the sampling rate and can be ignored for analysis purposes
             if signal_name == "Time":
                 continue
+
             scalars, arrays = self.analyze_signal(data[signal_name], sampling_rate=sampling_rate)
             self.analysis_scalar[cavity][signal_name] = scalars
+
+            self.analysis_array[cavity][signal_name] = {}
             for arr_name, array in arrays.items():
-                self.analysis_array[cavity][arr_name] = array
+                self.analysis_array[cavity][signal_name][arr_name] = array
 
     def insert_data(self, conn: mariadb.Connection):
         """Insert all data related to this Scan"""
@@ -138,7 +141,7 @@ class Scan:
         """
 
         if not isinstance(arr, (list, np.ndarray, tuple)):
-            raise TypeError("Input must be a list, numpy array, or tuple.")
+            raise TypeError(f"Input must be a list, numpy array, or tuple. Not {type(arr)}")
 
         arr = np.array(arr)
 
@@ -160,7 +163,7 @@ class Scan:
         q75 = np.percentile(arr, 75)
 
         # power spectrum analysis using Welch's method
-        f, Pxx_den = welch(arr, sampling_rate)
+        f, Pxx_den = periodogram(arr, sampling_rate)
 
         # find dominant frequency
         dominant_freq = f[np.argmax(Pxx_den)]
