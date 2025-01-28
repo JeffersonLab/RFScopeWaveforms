@@ -14,7 +14,7 @@ USE scope_waveforms;
 CREATE TABLE scan
 (
     sid            INT AUTO_INCREMENT,
-    scan_start_utc DATETIME NOT NULL,
+    scan_start_utc DATETIME(6) NOT NULL,
     PRIMARY KEY (sid)
 );
 CREATE INDEX scan_start_index ON scan (scan_start_utc);
@@ -29,6 +29,8 @@ CREATE TABLE waveform
     comment        VARCHAR(2048),
     PRIMARY KEY (wid),
     FOREIGN KEY (sid) REFERENCES scan (sid)
+        ON DELETE CASCADE
+        ON UPDATE CASCADE
 );
 CREATE INDEX waveform_cavity_index on waveform (cavity);
 
@@ -36,23 +38,27 @@ CREATE TABLE waveform_adata
 (
     wadid int AUTO_INCREMENT,
     wid   int,
-    name  varchar(32) NOT NULL, # Name of the array (raw, frequencies, power_spectrum)
+    process  varchar(32) NOT NULL, # Name of the array (raw, frequencies, power_spectrum)
     data  JSON        NOT NULL, # Array data in a json object
     PRIMARY KEY (wadid),
     FOREIGN KEY (wid) REFERENCES waveform (wid)
+        ON DELETE CASCADE
+        ON UPDATE CASCADE
 );
-CREATE INDEX wad_name_index on waveform_adata (name);
+CREATE INDEX wad_process_index on waveform_adata (process);
 
 CREATE TABLE waveform_sdata
 (
-    wadid int AUTO_INCREMENT,
+    wsdid int AUTO_INCREMENT,
     wid   int,
     name  varchar(32) NOT NULL, # Name of the scalar metric (mean, rms, etc.)
     value FLOAT       NOT NULL, # Value of the scalar metric
-    PRIMARY KEY (wadid),
+    PRIMARY KEY (wsdid),
     FOREIGN KEY (wid) REFERENCES waveform (wid)
+        ON DELETE CASCADE
+        ON UPDATE CASCADE
 );
-CREATE INDEX wsd_name_index on waveform_adata (name);
+CREATE INDEX wsd_name_index on waveform_sdata (name);
 
 CREATE TABLE scan_fdata
 (
@@ -62,6 +68,8 @@ CREATE TABLE scan_fdata
     value FLOAT       NOT NULL, # Value of the metric
     PRIMARY KEY (sfid),
     FOREIGN KEY (sid) REFERENCES scan (sid)
+        ON DELETE CASCADE
+        ON UPDATE CASCADE
 );
 CREATE INDEX sf_name_index on scan_fdata (name);
 CREATE INDEX sf_value_index on scan_fdata (value);
@@ -74,6 +82,8 @@ CREATE TABLE scan_sdata
     value varchar(512) NOT NULL,
     PRIMARY KEY (ssid),
     FOREIGN KEY (sid) REFERENCES scan (sid)
+        ON DELETE CASCADE
+        ON UPDATE CASCADE
 );
 CREATE INDEX ss_name_index on scan_sdata (name);
 CREATE INDEX ss_value_index on scan_sdata (value);
