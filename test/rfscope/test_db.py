@@ -39,10 +39,12 @@ class TestDB(unittest.TestCase):
         cavity_data1 = {
             'Time': t,
             'GMES': gmes,
+            'PMES': gmes,
         }
         cavity_data2 = {
             'Time': t,
             'GMES': gmes + 1,
+            'PMES': gmes + 1,
         }
 
         scalar_data = {
@@ -56,6 +58,18 @@ class TestDB(unittest.TestCase):
                     "standard_deviation": np.float64(0.3535384535785386),
                     "rms": np.float64(1.0606153659439252),
                     "25th_quartile":np.float64(0.6464856093668832),
+                    "75th_quartile": np.float64(1.3534360761155124),
+                    "dominant_frequency": np.float64(6.103515625)
+                },
+                'PMES': {
+                    "minimum": np.float64(0.5),
+                    "maximum": np.float64(1.5),
+                    "peak_to_peak": np.float64(1.0),
+                    "mean": np.float64(0.9999577572666067),
+                    "median": np.float64(0.9999629292071286),
+                    "standard_deviation": np.float64(0.3535384535785386),
+                    "rms": np.float64(1.0606153659439252),
+                    "25th_quartile": np.float64(0.6464856093668832),
                     "75th_quartile": np.float64(1.3534360761155124),
                     "dominant_frequency": np.float64(6.103515625)
                 }
@@ -72,6 +86,18 @@ class TestDB(unittest.TestCase):
                     "25th_quartile":np.float64(1.6464856093668832),
                     "75th_quartile": np.float64(2.3534360761155124),
                     "dominant_frequency": np.float64(6.103515625)
+                },
+                'PMES': {
+                    "minimum": np.float64(1.5),
+                    "maximum": np.float64(2.5),
+                    "peak_to_peak": np.float64(1.0),
+                    "mean": np.float64(1.9999577572666067),
+                    "median": np.float64(1.9999629292071286),
+                    "standard_deviation": np.float64(0.3535384535785386),
+                    "rms": np.float64(2.030965403203506),
+                    "25th_quartile": np.float64(1.6464856093668832),
+                    "75th_quartile": np.float64(2.3534360761155124),
+                    "dominant_frequency": np.float64(6.103515625)
                 }
             }
         }
@@ -85,6 +111,10 @@ class TestDB(unittest.TestCase):
 
         array_data = {
             'GMES': {
+                "power_spectrum": Pxx_den,
+                "frequencies": f
+            },
+            'PMES': {
                 "power_spectrum": Pxx_den,
                 "frequencies": f
             }
