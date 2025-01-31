@@ -3,7 +3,7 @@ from datetime import datetime
 
 import numpy as np
 
-from rfscope.db import Scan
+from rfscope.data_model import Scan
 
 
 class TestDB(unittest.TestCase):
@@ -23,7 +23,7 @@ class TestDB(unittest.TestCase):
         x = Scan(dt=TestDB.dt)
 
         float_data = {'a': 11.34, 'b': 12.34, 'c': 12}
-        string_data = {'a': 'test1', 'b': 'test2'}
+        string_data = {'as': 'test1', 'bs': 'test2'}
 
         x.add_scan_data(float_data, string_data)
         self.assertDictEqual(x.scan_data_float, float_data)
