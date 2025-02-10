@@ -29,9 +29,13 @@ dynamic = ["version"]
 [project.optional-dependencies]
 coverage = ['coverage >= 7.6, < 8.0']
 pytest = ['pytest >= 8.3, < 9.0']
+build= ['build >= 1.2, < 2.0']
 
 [tool.setuptools.packages.find]
 where = ["src"]
+
+[tool.setuptools.dynamic]
+version = {attr = "rfscopedb.__version__"}
 
 [tool.pytest.ini_options]
 pythonpath = ["src"]
