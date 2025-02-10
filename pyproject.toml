@@ -1,0 +1,47 @@
+[build-system]
+requires = ["setuptools", "setuptools-scm"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "rfscopedb"
+authors = [
+    {name = "Adam Carpenter", email = "adamc@jlab.org"},
+]
+description = "Software library for interacting with the RF Scope Waveform Dabase"
+readme = "README.md"
+requires-python = ">=3.11"
+keywords = ["rf", "RF", "waveform", "Waveform"]
+license = {text = "JLab"}
+classifiers = [
+    "Programming Language :: Python :: 3",
+]
+dependencies = [
+#    "requests",
+#    'importlib-metadata; python_version<"3.10"',
+    'mariadb >=1.1, < 2.0',
+    'numpy  >= 2.2, < 3.0',
+    'pandas >= 2.2, < 3.0',
+    'scipy >=1.15, < 2.0'
+]
+
+dynamic = ["version"]
+
+[project.optional-dependencies]
+coverage = ['coverage >= 7.6, < 8.0']
+pytest = ['pytest >= 8.3, < 9.0']
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+pythonpath = ["src"]
+testpaths = ["test/unit", "test/integration"]
+norecursedirs = [".git", "node_modules", "venv"]
+
+[tool.coverage.run]
+branch = true
+include = ['src/*']
+command_line = '-m pytest'
+
+# ... other project metadata fields as listed in:
+#     https://packaging.python.org/en/latest/guides/writing-pyproject-toml/
