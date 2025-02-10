@@ -3,8 +3,8 @@ from datetime import datetime
 
 import numpy as np
 
-from rfscope.db import WaveformDB
-from rfscope.data_model import Scan
+from rfscopedb.db import WaveformDB
+from rfscopedb.data_model import Scan
 
 
 class TestDB(unittest.TestCase):

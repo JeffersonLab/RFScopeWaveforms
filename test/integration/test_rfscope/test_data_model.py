@@ -4,8 +4,8 @@ from datetime import datetime
 import numpy as np
 import pandas as pd
 
-from rfscope.data_model import Scan, Query
-from rfscope.db import WaveformDB
+from rfscopedb.data_model import Scan, Query
+from rfscopedb.db import WaveformDB
 
 
 class TestQuery(unittest.TestCase):

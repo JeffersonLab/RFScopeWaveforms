@@ -4,9 +4,8 @@ from typing import Optional, Dict, Tuple, Any, List, Union
 
 import mariadb
 import numpy as np
-from numpy.dtypes import StringDType
 import pandas as pd
-from numpy.core.multiarray import ndarray
+from numpy import ndarray
 from scipy.signal import periodogram
 
 from .db import WaveformDB

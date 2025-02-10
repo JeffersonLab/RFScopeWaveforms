@@ -1,9 +1,14 @@
+import os
 import unittest
 from datetime import datetime
 
 import numpy as np
 
-from rfscope.data_model import Scan
+import sys
+print(sys.path)
+
+
+from rfscopedb.data_model import Scan
 
 
 class TestDB(unittest.TestCase):
@@ -102,10 +107,12 @@ class TestDB(unittest.TestCase):
             }
         }
 
+        print(os.getcwd())
         # There is a strong peak near 6.103 Hz, but there is still some mismatch in the represented frequencies that
         # leads to a lot of low level noise in the power spectrum across all frequencies (1e-7/1e-8)  It's easier to
         # save the exact output and load for a test, but the actual PSD spike is at the correct frequency.
-        Pxx_den = np.loadtxt(fname="test/power_spectrum.csv", delimiter=",")
+        # Pxx_den = np.loadtxt(fname="power_spectrum.csv", delimiter=",")
+        Pxx_den = np.loadtxt(fname="test/unit/power_spectrum.csv", delimiter=",")
         # Frequencies are multiples of the sampling resolution which equals sampling frequency / number of samples.
         f = [i * 5000.0 / 8192.0 for i in range(4097)]
 
