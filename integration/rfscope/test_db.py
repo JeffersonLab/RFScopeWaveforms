@@ -2,7 +2,6 @@ import unittest
 from datetime import datetime
 
 import numpy as np
-import pandas as pd
 
 from rfscope.db import WaveformDB
 from rfscope.data_model import Scan
