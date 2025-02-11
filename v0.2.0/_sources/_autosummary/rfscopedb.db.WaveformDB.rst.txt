@@ -1,0 +1,38 @@
+﻿rfscopedb.db.WaveformDB
+=======================
+
+.. currentmodule:: rfscopedb.db
+
+.. autoclass:: WaveformDB
+   :members:
+   :show-inheritance:
+   :inherited-members:
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~WaveformDB.__init__
+      ~WaveformDB.delete_scans
+      ~WaveformDB.gen_scan_join_statements
+      ~WaveformDB.get_scan_join_clauses
+      ~WaveformDB.query_scan_rows
+      ~WaveformDB.query_waveform_data
+      ~WaveformDB.query_waveform_metadata
+      ~WaveformDB.validate_ops
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~WaveformDB.valid_ops
+   
+   
