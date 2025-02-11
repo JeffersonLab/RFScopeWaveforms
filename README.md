@@ -43,10 +43,12 @@ git clone https://github.com/JeffersonLab/RFScopeWaveforms
 ```
 
 ### Testing
-This application supports testing using pytest.  Configuration in `pyproject.toml`.
+This application supports testing using `pytest` and code coverage using `coverage`.  Configuration in `pyproject.toml`.
 
-| Test Type       | Command                   |
-|-----------------|---------------------------|
-| Unit            | `pytest test/unit`        |
-| Integration     | `pytest test/integration` |
-| All             | `pytest`                  |
+| Test Type   | Command                   |
+|-------------|---------------------------|
+| Unit        | `pytest test/unit`        |
+| Integration | `pytest test/integration` |
+| All         | `pytest`                  |
+| Coverage    | `coverage run`            |
+
