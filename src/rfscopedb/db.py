@@ -184,8 +184,8 @@ class WaveformDB:
         Returns:
             A list of dictionaries each containing the scalar metadata for a single waveform.
         """
-        sid_params = ", ".join(["?" for i in range(len(sids))])
-        signal_params = ", ".join(["?" for i in range(len(signal_names))])
+        sid_params = ", ".join(["?" for _ in range(len(sids))])
+        signal_params = ", ".join(["?" for _ in range(len(signal_names))])
 
         sql = f"""
         SELECT * FROM waveform 
@@ -197,7 +197,7 @@ class WaveformDB:
 
         data = sids + signal_names
         if metric_names is not None and len(metric_names) > 0:
-            meta_params = ", ".join(["?" for i in range(len(metric_names))])
+            meta_params = ", ".join(["?" for _ in range(len(metric_names))])
             sql += f" AND waveform_sdata.name IN ({meta_params})"
             data += metric_names
 
@@ -278,7 +278,6 @@ class WaveformDB:
         # print(scan_tests)
 
         meta_tests = []
-        data = []
 
         # Process the other filters on scan metadata.  Split up the string based values from the numeric values since
         # they are in different tables.
