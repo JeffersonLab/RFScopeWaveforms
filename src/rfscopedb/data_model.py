@@ -102,7 +102,11 @@ class Scan:
                 self.analysis_array[cavity][signal_name][arr_name] = array
 
     def insert_data(self, conn: mariadb.Connection):
-        """Insert all data related to this Scan"""
+        """Insert all data related to this Scan into the database
+
+        Args:
+            conn: Connection to the database
+        """
         scan_time = get_datetime_as_utc(self.dt)
         cursor = None
         try:
@@ -231,28 +235,72 @@ class Scan:
         return scalars, arrays
 
     @staticmethod
-    def row_to_scan(row: Dict[str, Any]):
-        """Take a singe database row result and generates a Scan object from it.  Expects rows as dictionaries."""
+    def row_to_scan(row: Dict[str, Any]) -> 'Scan':
+        """Take a singe database row result and generates a Scan object from it.  Expects rows as dictionaries.
+
+        Args:
+            row: A dictionary result from a database cursor that contains basic information about a scan.
+
+        Returns:
+            A Scan object based on the database row result.
+        """
         return Scan(dt=row['scan_start_utc'].astimezone(), sid=row['sid'])
 
 
 class Query:
+    """This class is responsible for running queries of waveform data against the database.
 
-    def __init__(self, db: WaveformDB, signal_names: List[str], process_names: Optional[List[str]] = None,
+    The basic idea is that a Query will be staged, where information about the set of scans will be determined from the
+    database.  The user can investigate the scan information to determine if they would like to continue querying data
+    from the database.  Since querying large amounts of data from the database could consume large amounts of time and
+    system resources, the user may wish to check how many scans are included in their query before continuing.
+    """
+    staged: bool
+    scan_meta: None | pd.DataFrame
+    wf_data: None | pd.DataFrame
+    wf_meta: None | pd.DataFrame
+
+    def __init__(self, db: WaveformDB, signal_names: List[str], array_names: Optional[List[str]] = None,
                  begin: Optional[datetime] = None, end: Optional[datetime] = None,
                  scan_filter_params: Optional[List[str]] = None, scan_filter_ops: Optional[List[str]] = None,
-                 scan_filter_values: Optional[List[Union[float, str]]] = None, wf_metric_names: Optional[List[str]] = None):
+                 scan_filter_values: Optional[List[Union[float, str]]] = None,
+                 wf_metric_names: Optional[List[str]] = None):
+        """Construct a query object with the information needed to query scan and waveform data.
+
+        The three scan_filter_* parameters work in conjunction.  The must be list-like objects of the same length.  At
+        a given index, a filter is later constructed such that "<param> <op> <value>" is used in a SQL WHERE clause.
+        For example, if scan_filter_params = ['R123GMES', 'R223GMES'], scan_filter_ops = ['>', '<'], and
+        scan_filter_values = [5, 2], then each scan included in the query must meet the following criteria:
+            R123GMES > 5 AND R223GMES < 2
+
+        Args:
+            db: A WaveFromDB object that contains an active connection to the database.
+            signal_names: A list of signals (a.k.a. waveforms) to query.  E.g., GMES, PMES, etc.
+            array_names: Each signal/waveform may have multiple arrays of data associated with it.  For example, 'raw'
+                         returns the unmodified waveform data, while 'power_spectrum' returns the power at different
+                         frequencies.
+            begin: The earliest start time for which a scan will be included in the query.  If None, there is
+                   no earliest time filter.
+            end: The latest end time for which a scan will be included in the query.  If None, there is latest time
+                 filter.
+             scan_filter_params: A list of metadata parameter names used to filter the scans for the query
+             scan_filter_ops: A list of SQL comparison operators used to filter the scans for the query
+             scan_filter_values: A list of values used to filter the scans for the query
+             wf_metric_names: A list of scalar metrics related to a waveform that will be included if they exist in the
+                              database.
+            """
+
         self.db = db
         self.signal_names = signal_names
-        self.process_names = process_names
+        self.array_names = array_names
         self.begin = begin
         self.end = end
         self.scan_filter_params = scan_filter_params
         self.scan_filter_ops = scan_filter_ops
         self.scan_filter_values = scan_filter_values
         self.wf_metric_names = wf_metric_names
-        self.staged = False
 
+        self.staged = False
         self.scan_meta = None
         self.wf_data = None
         self.wf_meta = None
@@ -265,12 +313,18 @@ class Query:
         self.scan_meta = pd.DataFrame(scan_rows, index=None)
         self.staged = True
 
+    def get_scan_count(self):
+        """Get the number of scans that meet the requested criteria."""
+        return len(self.scan_meta)
+
     def run(self):
+        """Run the full query that will return the full waveform data and metadata.  Must run stage() first."""
         if not self.staged:
             raise RuntimeError(f"Query not staged.")
 
+        # Note that in the database, array names are specified by the "process" that generated them.
         rows = self.db.query_waveform_data(self.scan_meta.sid.values.tolist(), signal_names=self.signal_names,
-                             process_names=self.process_names)
+                             process_names=self.array_names)
         self.wf_data = pd.DataFrame(rows)
 
         rows = self.db.query_waveform_metadata(self.scan_meta.sid.values.tolist(), signal_names=self.signal_names,
