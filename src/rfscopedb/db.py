@@ -1,6 +1,6 @@
 import json
 from datetime import datetime
-from typing import Dict, Tuple, List, Union, Any
+from typing import Dict, Tuple, List, Union, Any, Optional
 
 import numpy as np
 import mariadb
@@ -117,35 +117,45 @@ class WaveformDB:
 
         return [val for val in scan_meta.values()]
 
-    def query_waveform_data(self, sids: List[int], signal_names: List[str],
-                            process_names: List[str]) -> List[Dict[str, Any]]:
+    def query_waveform_data(self, sids: List[int], signal_names: Optional[List[str]],
+                            process_names: Optional[List[str]]) -> List[Dict[str, Any]]:
         """Queries the waveform array data for a given set of sids, signal_names, and process_names.
 
         Results are stored internal to this object.
 
         Args:
             sids: A list of scan database identifiers to query waveform data
-            signal_names: A list of the signal names to include data from  (GMES, PMES, etc.)
+            signal_names: A list of the signal names to include data from  (GMES, PMES, etc.).  If None, all signals are
+                          queried.
             process_names: A list of the process names to include data from (names of array transforms, e.g. raw
-                           or power_spectrum)
+                           or power_spectrum). If None, all array types are queried.
 
         Returns:
             A list of dictionaries each containing the data for a single array of raw or process data from a waveform.
         """
-        sid_params = ", ".join(["?" for i in range(len(sids))])
-        signal_params = ", ".join(["?" for i in range(len(signal_names))])
-        process_params = ", ".join(["?" for i in range(len(process_names))])
+        if sids is None or len(sids) == 0:
+            raise ValueError("Must specify at least one sid")
+
+        data = sids
+        sid_params = ", ".join(["?" for _ in range(len(sids))])
         sql = f"""
         SELECT * FROM waveform 
             JOIN waveform_adata 
                 ON waveform.wid = waveform_adata.wid
-                WHERE waveform.sid in ({sid_params}) 
-                    AND waveform.signal_name IN ({signal_params})
-                    AND waveform_adata.process IN ({process_params})
-"""
+                WHERE waveform.sid in ({sid_params})
+                """
+        if signal_names is not None and len(signal_names) > 0:
+            data += signal_names
+            signal_params = ", ".join(["?" for _ in range(len(signal_names))])
+            sql += f"AND waveform.signal_name IN ({signal_params})\n"
+
+        if process_names is not None and len(process_names) > 0:
+            data += process_names
+            process_params = ", ".join(["?" for _ in range(len(process_names))])
+            sql += f"AND waveform_adata.process IN ({process_params})\n"
+
         cursor = None
         try:
-            data = sids + signal_names + process_names
             cursor = self.conn.cursor(dictionary=True)
             cursor.execute(sql, data)
 
