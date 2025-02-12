@@ -1,4 +1,6 @@
-
+# Extra Sphinx excludes - adamc
+# Should be built/updated on sphinx-build runs
+docsrc/source/_autosummary
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
