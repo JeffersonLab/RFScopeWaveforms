@@ -1,6 +1,8 @@
 # rfscopedb
 Software for collecting, storing and accessing Scope Mode RF Waveforms
 
+## Documentation
+More complete documentation can be found at [GitHub Pages](https://jeffersonlab.github.io/rfscopedb/).
 
 ## Quick Start Guide
 Create a virtual environment using pythong 3.11+, then install the package there.  Note: update the version tag to match
@@ -11,7 +13,7 @@ mkdir my_app
 cd my_app
 python.exe -m venv venv
 source venv/bin/activate
-pip install git+https://github.com/JeffersonLab/RFScopeWaveforms@v0.1.0
+pip install git+https://github.com/JeffersonLab/RFScopeWaveforms@v0.2.0
 ```
 
 The repo ships with a docker compose file that will launch a simple database that holds simple test data.  Here are some
@@ -45,10 +47,19 @@ git clone https://github.com/JeffersonLab/RFScopeWaveforms
 ### Testing
 This application supports testing using `pytest` and code coverage using `coverage`.  Configuration in `pyproject.toml`.
 
-| Test Type   | Command                   |
-|-------------|---------------------------|
-| Unit        | `pytest test/unit`        |
-| Integration | `pytest test/integration` |
-| All         | `pytest`                  |
-| Coverage    | `coverage run`            |
+| Test Type          | Command                   |
+|--------------------|---------------------------|
+| Unit               | `pytest test/unit`        |
+| Integration        | `pytest test/integration` |
+| Unit & Integration | `pytest`                  |
+| Code Coverage      | `coverage run`            |
 
+### Documentation
+Documentation is done in Sphinx.  To build documentation, run this commands from the project root.
+
+```
+sphinx-build -b html docsrc/source docsrc/build/docs
+```
+
+If releasing a new version, copy docsrc/build/docs to a version named directory in the gh-pages branch.  Commit and push
+updates to gh-pages branch to update the official documentation on github.io. 
