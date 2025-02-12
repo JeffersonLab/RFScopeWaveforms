@@ -48,7 +48,7 @@ class TestQuery(unittest.TestCase):
         x3.add_cavity_data("c3", data=cavity_data3, sampling_rate=5000)
         x3.add_scan_data(float_data={'a': 1.1, "b": 2.1}, str_data={'c': 'on'})
 
-        query = Query(db=TestQuery.db, signal_names=signal_names, process_names=process_names)
+        query = Query(db=TestQuery.db, signal_names=signal_names, array_names=process_names)
         query.stage()
         query.run()
 
