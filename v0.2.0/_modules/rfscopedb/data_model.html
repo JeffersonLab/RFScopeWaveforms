@@ -5,20 +5,20 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>rfscopedb.data_model &mdash; rfscopedb 0.2.0 documentation</title>
+  <title>rfscopedb.data_model &mdash; rfscopedb  documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=e59714d7" />
 
   
       <script src="../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../_static/documentation_options.js?v=938c9ccc"></script>
+      <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
       <script src="../../_static/doctools.js?v=9bcbadda"></script>
       <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
-    <link href="../../_static/rtd_custom.css" rel="stylesheet" type="text/css">
+<link href="../../_static/rtd_custom.css" rel="stylesheet" type="text/css">
 
 </head>
 
@@ -366,24 +366,25 @@
 
 <span class="sd">        The three scan_filter_* parameters work in conjunction.  The must be list-like objects of the same length.  At</span>
 <span class="sd">        a given index, a filter is later constructed such that &quot;&lt;param&gt; &lt;op&gt; &lt;value&gt;&quot; is used in a SQL WHERE clause.</span>
-<span class="sd">        For example, if ``scan_filter_params = [&#39;R123GMES&#39;, &#39;R223GMES&#39;]``, ``scan_filter_ops = [&#39;&gt;&#39;, &#39;&lt;&#39;]``, and</span>
-<span class="sd">        ``scan_filter_values = [5, 2]``, then each scan included in the query meets the</span>
-<span class="sd">        ``R123GMES &gt; 5 AND R223GMES &lt; 2`` criteria.</span>
+<span class="sd">        For example, if scan_filter_params = [&#39;R123GMES&#39;, &#39;R223GMES&#39;], scan_filter_ops = [&#39;&gt;&#39;, &#39;&lt;&#39;], and</span>
+<span class="sd">        scan_filter_values = [5, 2], then each scan included in the query must meet the following criteria:</span>
+<span class="sd">            R123GMES &gt; 5 AND R223GMES &lt; 2</span>
 
 <span class="sd">        Args:</span>
 <span class="sd">            db: A WaveFromDB object that contains an active connection to the database.</span>
 <span class="sd">            signal_names: A list of signals (a.k.a. waveforms) to query.  E.g., GMES, PMES, etc.</span>
 <span class="sd">            array_names: Each signal/waveform may have multiple arrays of data associated with it.  For example, &#39;raw&#39;</span>
-<span class="sd">             returns the unmodified waveform data, while &#39;power_spectrum&#39; returns the power at different frequencies.</span>
-<span class="sd">            begin: The earliest start time for which a scan will be included in the query.  If None, there is no</span>
-<span class="sd">            earliest time filter.</span>
+<span class="sd">                         returns the unmodified waveform data, while &#39;power_spectrum&#39; returns the power at different</span>
+<span class="sd">                         frequencies.</span>
+<span class="sd">            begin: The earliest start time for which a scan will be included in the query.  If None, there is</span>
+<span class="sd">                   no earliest time filter.</span>
 <span class="sd">            end: The latest end time for which a scan will be included in the query.  If None, there is latest time</span>
-<span class="sd">             filter.</span>
-<span class="sd">            scan_filter_params: A list of metadata parameter names used to filter the scans for the query</span>
-<span class="sd">            scan_filter_ops: A list of SQL comparison operators used to filter the scans for the query</span>
-<span class="sd">            scan_filter_values: A list of values used to filter the scans for the query</span>
-<span class="sd">            wf_metric_names: A list of scalar metrics related to a waveform that will be included if they exist in the</span>
-<span class="sd">             database.</span>
+<span class="sd">                 filter.</span>
+<span class="sd">             scan_filter_params: A list of metadata parameter names used to filter the scans for the query</span>
+<span class="sd">             scan_filter_ops: A list of SQL comparison operators used to filter the scans for the query</span>
+<span class="sd">             scan_filter_values: A list of values used to filter the scans for the query</span>
+<span class="sd">             wf_metric_names: A list of scalar metrics related to a waveform that will be included if they exist in the</span>
+<span class="sd">                              database.</span>
 <span class="sd">            &quot;&quot;&quot;</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">db</span> <span class="o">=</span> <span class="n">db</span>
@@ -429,11 +430,11 @@
 
         <span class="c1"># Note that in the database, array names are specified by the &quot;process&quot; that generated them.</span>
         <span class="n">rows</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="o">.</span><span class="n">query_waveform_data</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">scan_meta</span><span class="o">.</span><span class="n">sid</span><span class="o">.</span><span class="n">values</span><span class="o">.</span><span class="n">tolist</span><span class="p">(),</span> <span class="n">signal_names</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">signal_names</span><span class="p">,</span>
-                                           <span class="n">process_names</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">array_names</span><span class="p">)</span>
+                             <span class="n">process_names</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">array_names</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">wf_data</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">rows</span><span class="p">)</span>
 
         <span class="n">rows</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="o">.</span><span class="n">query_waveform_metadata</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">scan_meta</span><span class="o">.</span><span class="n">sid</span><span class="o">.</span><span class="n">values</span><span class="o">.</span><span class="n">tolist</span><span class="p">(),</span> <span class="n">signal_names</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">signal_names</span><span class="p">,</span>
-                                               <span class="n">metric_names</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">wf_metric_names</span><span class="p">)</span>
+                                     <span class="n">metric_names</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">wf_metric_names</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">wf_meta</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">rows</span><span class="p">)</span></div>
 </div>
 
@@ -446,7 +447,7 @@
   <hr/>
 
   <div role="contentinfo">
-    <p>&#169; Copyright 2025, Jefferson Lab.</p>
+    <p>&#169; Copyright 2025, Adam Carpenter.</p>
   </div>
 
   Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a

@@ -1,4 +1,4 @@
-﻿rfscopedb.data\_model.Query
+rfscopedb.data\_model.Query
 ===========================
 
 .. currentmodule:: rfscopedb.data_model

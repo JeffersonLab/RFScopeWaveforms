@@ -1,4 +1,4 @@
-﻿rfscopedb.data\_model.Scan
+rfscopedb.data\_model.Scan
 ==========================
 
 .. currentmodule:: rfscopedb.data_model

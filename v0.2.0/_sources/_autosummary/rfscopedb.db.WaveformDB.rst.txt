@@ -1,4 +1,4 @@
-﻿rfscopedb.db.WaveformDB
+rfscopedb.db.WaveformDB
 =======================
 
 .. currentmodule:: rfscopedb.db
