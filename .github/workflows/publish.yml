@@ -8,15 +8,48 @@ on:
       - 'VERSION'
 
 jobs:
-  release:
-    uses: jeffersonlab/python-workflows/.github/workflows/gh-release.yaml@v3
-
+#  release:
+#    uses: jeffersonlab/python-workflows/.github/workflows/gh-release.yaml@v3
+#
 #  docs_publish:
 #    needs:
 #      - release
 #    uses: jeffersonlab/python-workflows/.github/workflows/gh-pages-publish.yaml@v3
 #    with:
 #      semvertag: ${{ needs.release.outputs.semvertag }}
+
+  release:
+    - runs-on: ubuntu-latest
+    - outputs:
+      - semvertag: ${{ steps.getver.outputs.semvertag }}
+    - steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup Build
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.9"
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e .[dev]
+      - name: Build
+        run: |
+          python -m build
+          sphinx-build -b html docsrc/source build/docs
+      - name: Read version file
+        id: getver
+        run: |
+          VER=$(cat VERSION)
+          echo "VERSION=v$VER" >> $GITHUB_ENV
+          echo "semvertag=v$VER" >> $GITHUB_OUTPUT
+      - name: Release
+        uses: softprops/action-gh-release@v2
+        with:
+          generate_release_notes: true
+          tag_name: ${{ env.VERSION }}
+#          files: ${{ inputs.files }}
+
 
   publish:
     needs:
