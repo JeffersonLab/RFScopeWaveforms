@@ -1,27 +1,20 @@
 # rfscopedb
-Software for collecting, storing and accessing Scope Mode RF Waveforms
+Software for collecting, storing and accessing Scope Mode RF Waveforms.  This projects relies on python v3.11+.
 
 ## Documentation
 More complete documentation can be found at [GitHub Pages](https://jeffersonlab.github.io/rfscopedb/).
 
 ## Quick Start Guide
-Create a virtual environment using pythong 3.11+, then install the package there.  Note: update the version tag to match
-desired version.
-
-```bash
-mkdir my_app
-cd my_app
-python.exe -m venv venv
-source venv/bin/activate
-pip install git+https://github.com/JeffersonLab/RFScopeWaveforms@v0.2.0
+Starting with version 0.2.0, source and wheel files are attached to each GitHub release and can be installed 
+using pip as follows.  Update the version strings to match desired version.  See 
+[Releases](https://github.com/JeffersonLab/rfscopedb/releases) for more details.
+```
+pip install https://github.com/JeffersonLab/rfscopedb/releases/download/v0.2.0/rfscopedb-0.2.0-py3-none-any.whl
 ```
 
-The repo ships with a docker compose file that will launch a simple database that holds simple test data.  Here are some
-example commands to query data on all Scans from the database using this library.  This assumes that you have started
-the database using `docker compose up` and that you're environment has `src/` in your python search path either by
- installing the package(e.g., `pip install .` or `pip install -e .`), manually setting PYTHONPATH variable, or other
-means such as starting a python interpreter in the `src/` directory.
-
+### Example Usage
+Below is an example of querying data from rfscopedb database.  This assumes you have a production database running
+or that you have the provided docker container database running (see [Developer Quick Start Guide](#developer-quick-start-guide)).
 ```python
 from rfscopedb.db import WaveformDB
 from rfscopedb.data_model import Query
@@ -38,14 +31,35 @@ print(q.wf_data.head())
 ```
 
 ## Developer Quick Start Guide
-Download the repo, create a virtual environment using pythong 3.11+.  Then develop using your preferred IDE, etc.
+Download the repo, create a virtual environment using pythong 3.11+, and install the package in editable mode with 
+development dependencies.  Then develop using your preferred IDE, etc.
 
+*Linux*
 ```bash
-git clone https://github.com/JeffersonLab/RFScopeWaveforms
+git clone https://github.com/JeffersonLab/rfscopedb
+cd rfscopedb
+python3.11 -m venv venv
+venv/bin/activate
+pip install -e .[dvl]
+```
+
+*Windows*
+```bash
+git clone https://github.com/JeffersonLab/rfscopedb
+cd rfscopedb
+python3.11 -m venv venv
+venv/bin/activate.ps1
+pip install -e .[dvl]
+```
+
+To start the provided database.
+```
+docker compose up
 ```
 
 ### Testing
 This application supports testing using `pytest` and code coverage using `coverage`.  Configuration in `pyproject.toml`.
+Integration tests required that the provided docker container(s) are running.
 
 | Test Type          | Command                   |
 |--------------------|---------------------------|
@@ -56,7 +70,6 @@ This application supports testing using `pytest` and code coverage using `covera
 
 ### Documentation
 Documentation is done in Sphinx.  To build documentation, run this commands from the project root.
-
 ```
 sphinx-build -b html docsrc/source docsrc/build/docs
 ```
