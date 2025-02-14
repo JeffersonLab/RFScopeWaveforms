@@ -4,7 +4,8 @@ on:
   push:
     branches: [ main ]
     paths:
-      - 'src/rfscopedb/__version__.py'
+#      - 'src/rfscopedb/__version__.py'
+      - 'VERSION'
 
 jobs:
   release:
