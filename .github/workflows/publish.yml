@@ -1,0 +1,18 @@
+name: CD
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - 'src/rfscopedb/__version__.py'
+
+jobs:
+  release:
+    uses: jeffersonlab/python-workflows/.github/workflows/gh-release.yaml@v3
+
+  docs_publish:
+    needs:
+      - release
+    uses: jeffersonlab/python-workflows/.github/workflows/gh-pages-publish.yaml@v3
+    with:
+      semvertag: ${{ needs.release.outputs.semvertag }}

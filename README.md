@@ -40,7 +40,7 @@ git clone https://github.com/JeffersonLab/rfscopedb
 cd rfscopedb
 python3.11 -m venv venv
 venv/bin/activate
-pip install -e .[dvl]
+pip install -e .[dev]
 ```
 
 *Windows*
@@ -49,7 +49,7 @@ git clone https://github.com/JeffersonLab/rfscopedb
 cd rfscopedb
 python3.11 -m venv venv
 venv/bin/activate.ps1
-pip install -e .[dvl]
+pip install -e .[dev]
 ```
 
 To start the provided database.
@@ -71,7 +71,7 @@ Integration tests required that the provided docker container(s) are running.
 ### Documentation
 Documentation is done in Sphinx.  To build documentation, run this commands from the project root.
 ```
-sphinx-build -b html docsrc/source docsrc/build/docs
+sphinx-build -b html docsrc/source build/docs
 ```
 
 If releasing a new version, copy docsrc/build/docs to a version named directory in the gh-pages branch.  Commit and push
