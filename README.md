@@ -47,8 +47,8 @@ pip install -e .[dev]
 ```bash
 git clone https://github.com/JeffersonLab/rfscopedb
 cd rfscopedb
-python3.11 -m venv venv
-venv/bin/activate.ps1
+\path\to\python3 -m venv venv
+venv\Scripts\activate.ps1
 pip install -e .[dev]
 ```
 
