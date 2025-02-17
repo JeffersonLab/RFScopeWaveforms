@@ -2,7 +2,7 @@ import json
 from datetime import datetime
 from typing import Optional, Dict, Tuple, Any, List, Union
 
-import mariadb
+import mysql.connector
 import numpy as np
 import pandas as pd
 from numpy import ndarray
@@ -101,7 +101,7 @@ class Scan:
             for arr_name, array in arrays.items():
                 self.analysis_array[cavity][signal_name][arr_name] = array
 
-    def insert_data(self, conn: mariadb.Connection):
+    def insert_data(self, conn: mysql.connector.MySQLConnection):
         """Insert all data related to this Scan into the database
 
         Args:
@@ -110,11 +110,10 @@ class Scan:
         scan_time = get_datetime_as_utc(self.dt)
         cursor = None
         try:
-            # Start the transaction
-            conn.begin()
+            # Transaction started by default since autocommit is off.
             cursor = conn.cursor()
             # Note: execute and executemany do sanitation and prepared statements internally.
-            cursor.execute("INSERT INTO scan (scan_start_utc)  VALUES (?)",
+            cursor.execute("INSERT INTO scan (scan_start_utc)  VALUES (%s)",
                            (scan_time.strftime('%Y-%m-%d %H:%M:%S.%f'),))
             cursor.execute("SELECT LAST_INSERT_ID()")
             sid = cursor.fetchone()[0]
@@ -124,7 +123,7 @@ class Scan:
                     if signal_name == "Time":
                         continue
                     waveform_data = (sid, cav, signal_name, self.sampling_rate[cav])
-                    cursor.execute("INSERT INTO waveform(sid, cavity, signal_name, sample_rate_hz) VALUES (?, ?, ?, ?)",
+                    cursor.execute("INSERT INTO waveform(sid, cavity, signal_name, sample_rate_hz) VALUES (%s, %s, %s, %s)",
                                    waveform_data)
                     cursor.execute("SELECT LAST_INSERT_ID()")
                     wid = cursor.fetchone()[0]
@@ -135,13 +134,13 @@ class Scan:
                         array_data.append(
                             (wid, arr_name, json.dumps(self.analysis_array[cav][signal_name][arr_name].tolist())))
 
-                    cursor.executemany("INSERT INTO waveform_adata (wid, process, data) VALUES (?, ?, ?)", array_data)
+                    cursor.executemany("INSERT INTO waveform_adata (wid, process, data) VALUES (%s, %s, %s)", array_data)
 
                     scalar_data = []
                     for metric_name, value in self.analysis_scalar[cav][signal_name].items():
                         scalar_data.append((wid, metric_name, value))
 
-                    cursor.executemany("INSERT INTO waveform_sdata (wid, name, value) VALUES (?, ?, ?)",
+                    cursor.executemany("INSERT INTO waveform_sdata (wid, name, value) VALUES (%s, %s, %s)",
                                        scalar_data)
 
             sdf = []
@@ -149,18 +148,18 @@ class Scan:
                 sdf.append((sid, key, value))
 
             if len(sdf) > 0:
-                cursor.executemany("INSERT INTO scan_fdata (sid, name, value) VALUES (?, ?, ?)", sdf)
+                cursor.executemany("INSERT INTO scan_fdata (sid, name, value) VALUES (%s, %s, %s)", sdf)
 
             sds = []
             for key, value in self.scan_data_str.items():
                 sds.append((sid, key, value))
             if len(sds) > 0:
-                cursor.executemany("INSERT INTO scan_sdata (sid, name, value) VALUES (?, ?, ?)", sds)
+                cursor.executemany("INSERT INTO scan_sdata (sid, name, value) VALUES (%s, %s, %s)", sds)
 
             # Commit the transaction if we were able to successfully insert all the data.  Otherwise, an exception
             # should have been raised that was caught to roll back the transaction.
             conn.commit()
-        except (mariadb.Error, Exception) as e:
+        except (mysql.connector.Error, Exception) as e:
             if conn is not None:
                 # There was a problem so this should roll back the entire transaction across all the tables.
                 conn.rollback()

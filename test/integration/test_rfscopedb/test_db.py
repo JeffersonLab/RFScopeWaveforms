@@ -165,7 +165,7 @@ class TestDB(unittest.TestCase):
         sids = [row['sid'] for row in db.query_scan_rows(begin=dt1, end=dt2)]
         self.assertEqual(0, len(sids))
         # The long running TestDB.db.conn object doesn't see these updates unless it is reset.
-        TestDB.db.conn.reset()
+        TestDB.db.conn.cmd_reset_connection()
 
     def test_query_waveform_data1(self):
         with self.assertRaises(TypeError):

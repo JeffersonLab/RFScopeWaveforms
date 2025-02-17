@@ -3,7 +3,7 @@ from datetime import datetime
 from typing import Dict, Tuple, List, Union, Any, Optional
 
 import numpy as np
-import mariadb
+import mysql.connector
 
 from .utils import get_datetime_as_utc
 
@@ -18,12 +18,13 @@ class WaveformDB:
         self.database = database
 
         # Will throw exception if it cannot connect
-        self.conn = mariadb.connect(
+        self.conn = mysql.connector.connect(
             host=self.host,
             port=self.port,
             user=self.user,
             password=password,
-            database=self.database
+            database=self.database,
+            autocommit=False
         )
         self.conn.autocommit = False
 
@@ -137,7 +138,7 @@ class WaveformDB:
             raise ValueError("Must specify at least one sid")
 
         data = sids
-        sid_params = ", ".join(["?" for _ in range(len(sids))])
+        sid_params = ", ".join(["%s" for _ in range(len(sids))])
         sql = f"""
         SELECT * FROM waveform 
             JOIN waveform_adata 
@@ -146,12 +147,12 @@ class WaveformDB:
                 """
         if signal_names is not None and len(signal_names) > 0:
             data += signal_names
-            signal_params = ", ".join(["?" for _ in range(len(signal_names))])
+            signal_params = ", ".join(["%s" for _ in range(len(signal_names))])
             sql += f"AND waveform.signal_name IN ({signal_params})\n"
 
         if process_names is not None and len(process_names) > 0:
             data += process_names
-            process_params = ", ".join(["?" for _ in range(len(process_names))])
+            process_params = ", ".join(["%s" for _ in range(len(process_names))])
             sql += f"AND waveform_adata.process IN ({process_params})\n"
 
         cursor = None
@@ -184,8 +185,8 @@ class WaveformDB:
         Returns:
             A list of dictionaries each containing the scalar metadata for a single waveform.
         """
-        sid_params = ", ".join(["?" for _ in range(len(sids))])
-        signal_params = ", ".join(["?" for _ in range(len(signal_names))])
+        sid_params = ", ".join(["%s" for _ in range(len(sids))])
+        signal_params = ", ".join(["%s" for _ in range(len(signal_names))])
 
         sql = f"""
         SELECT * FROM waveform 
@@ -197,7 +198,7 @@ class WaveformDB:
 
         data = sids + signal_names
         if metric_names is not None and len(metric_names) > 0:
-            meta_params = ", ".join(["?" for _ in range(len(metric_names))])
+            meta_params = ", ".join(["%s" for _ in range(len(metric_names))])
             sql += f" AND waveform_sdata.name IN ({meta_params})"
             data += metric_names
 
@@ -254,7 +255,7 @@ class WaveformDB:
             if isinstance(item[2], str):
                 table = "scan_sdata"
             sql += f" JOIN (SELECT {table}.sid FROM {table} WHERE name = "
-            sql += f"? and value {item[1]} ?) as s{idx} ON scan.sid = s{idx}.sid\n"
+            sql += f"%s and value {item[1]} %s) as s{idx} ON scan.sid = s{idx}.sid\n"
         return sql, data
 
     @classmethod
@@ -299,10 +300,10 @@ class WaveformDB:
                                get_datetime_as_utc(end).strftime("%Y-%m-%d %H:%M:%S.%f")))
 
         if len(scan_tests) != 0:
-            sql += f" WHERE {scan_tests[0][0]} {scan_tests[0][1]} ?"
+            sql += f" WHERE {scan_tests[0][0]} {scan_tests[0][1]} %s"
             data.append(scan_tests[0][2])
             for i in range(1, len(scan_tests)):
-                sql += f" AND {scan_tests[i][0]} {scan_tests[i][1]} ?"
+                sql += f" AND {scan_tests[i][0]} {scan_tests[i][1]} %s"
                 data.append(scan_tests[i][2])
 
         return sql, data
@@ -320,9 +321,9 @@ class WaveformDB:
         """
 
         cursor = None
-        sql = "DELETE FROM scan WHERE sid = ?"
+        sql = "DELETE FROM scan WHERE sid = %s"
         try:
-            self.conn.begin()
+            # First command begins a transaction when autocommit == False
             cursor = self.conn.cursor()
             cursor.execute(sql, (sid,))
             count = cursor.rowcount
