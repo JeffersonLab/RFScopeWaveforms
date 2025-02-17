@@ -59,8 +59,6 @@ jobs:
           python-version: '3.11' 
       - name: Install dependencies
         run: |
-          sudo apt-get update -y
-          sudo apt-get install -y libmariadb-dev
           python -m pip install --upgrade pip
           pip install -e .[dev]
           pip install cibuildwheel
