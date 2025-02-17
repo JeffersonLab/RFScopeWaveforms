@@ -62,9 +62,11 @@ jobs:
           sudo apt-get install -y libmariadb-dev
           python -m pip install --upgrade pip
           pip install -e .[dev]
+          pip install cibuildwheel
       - name: Build
         run: |
-          python -m build
+#          python -m build
+          cibuildwheel --platform linux
           sphinx-build -b html docsrc/source build/docs
       - name: Deploy Docs
         uses: JamesIves/github-pages-deploy-action@v4
