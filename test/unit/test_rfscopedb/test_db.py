@@ -107,7 +107,6 @@ class TestDB(unittest.TestCase):
             }
         }
 
-        print(os.getcwd())
         # There is a strong peak near 6.103 Hz, but there is still some mismatch in the represented frequencies that
         # leads to a lot of low level noise in the power spectrum across all frequencies (1e-7/1e-8)  It's easier to
         # save the exact output and load for a test, but the actual PSD spike is at the correct frequency.

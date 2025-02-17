@@ -1,8 +1,11 @@
+"""A package for interacting with data at a more tractable level"""
+
 import json
 from datetime import datetime
 from typing import Optional, Dict, Tuple, Any, List, Union
 
 import mysql.connector
+from mysql.connector.cursor import MySQLCursor
 import numpy as np
 import pandas as pd
 from numpy import ndarray
@@ -10,6 +13,7 @@ from scipy.signal import periodogram
 
 from .db import WaveformDB
 from .utils import get_datetime_as_utc
+
 
 
 class Scan:
@@ -122,39 +126,13 @@ class Scan:
                 for signal_name in self.waveform_data[cav]:
                     if signal_name == "Time":
                         continue
-                    waveform_data = (sid, cav, signal_name, self.sampling_rate[cav])
-                    cursor.execute("INSERT INTO waveform(sid, cavity, signal_name, sample_rate_hz) VALUES (%s, %s, %s, %s)",
-                                   waveform_data)
-                    cursor.execute("SELECT LAST_INSERT_ID()")
-                    wid = cursor.fetchone()[0]
 
-                    # Append the array data for the waveform
-                    array_data = [(wid, "raw", json.dumps(self.waveform_data[cav][signal_name].tolist()))]
-                    for arr_name, array in self.analysis_array[cav][signal_name].items():
-                        array_data.append(
-                            (wid, arr_name, json.dumps(self.analysis_array[cav][signal_name][arr_name].tolist())))
+                    wid = self._insert_waveform(cursor, sid, cav, signal_name)
+                    self._insert_waveform_adata(cursor, wid, cav, signal_name)
+                    self._insert_waveform_sdata(cursor, wid, cav, signal_name)
 
-                    cursor.executemany("INSERT INTO waveform_adata (wid, process, data) VALUES (%s, %s, %s)", array_data)
-
-                    scalar_data = []
-                    for metric_name, value in self.analysis_scalar[cav][signal_name].items():
-                        scalar_data.append((wid, metric_name, value))
-
-                    cursor.executemany("INSERT INTO waveform_sdata (wid, name, value) VALUES (%s, %s, %s)",
-                                       scalar_data)
-
-            sdf = []
-            for key, value in self.scan_data_float.items():
-                sdf.append((sid, key, value))
-
-            if len(sdf) > 0:
-                cursor.executemany("INSERT INTO scan_fdata (sid, name, value) VALUES (%s, %s, %s)", sdf)
-
-            sds = []
-            for key, value in self.scan_data_str.items():
-                sds.append((sid, key, value))
-            if len(sds) > 0:
-                cursor.executemany("INSERT INTO scan_sdata (sid, name, value) VALUES (%s, %s, %s)", sds)
+            self._insert_scan_fdata(cursor, sid)
+            self._insert_scan_sdata(cursor, sid)
 
             # Commit the transaction if we were able to successfully insert all the data.  Otherwise, an exception
             # should have been raised that was caught to roll back the transaction.
@@ -171,6 +149,73 @@ class Scan:
             # TODO: Alternative to catch and throw?
 
             raise e
+
+    def _insert_waveform(self, cursor: MySQLCursor, sid: int, cav: str, signal_name: str) -> int:
+        """Insert a waveform into the database and return it's wid key."""
+        cursor.execute("INSERT INTO waveform(sid, cavity, signal_name, sample_rate_hz) VALUES (%s, %s, %s, %s)",
+            (sid, cav, signal_name, self.sampling_rate[cav]))
+        cursor.execute("SELECT LAST_INSERT_ID()")
+        return cursor.fetchone()[0]
+
+    def _insert_waveform_adata(self, cursor: MySQLCursor, wid: int, cav: str, signal_name: str):
+        """Insert the waveform array data to the database.
+
+        Args:
+            cursor: A database cursor
+            wid: The unique id of the waveform
+            cav: The name of the cavity ("R123")
+            signal_name: The name of the signal ("GMES")
+        """
+        # Append the array data for the waveform.  'raw' is not an analytical waveform and needs to be done separately
+        array_data = [(wid, "raw", json.dumps(self.waveform_data[cav][signal_name].tolist()))]
+        for arr_name, array in self.analysis_array[cav][signal_name].items():
+            array_data.append(
+                (wid, arr_name, json.dumps(self.analysis_array[cav][signal_name][arr_name].tolist())))
+
+        cursor.executemany("INSERT INTO waveform_adata (wid, process, data) VALUES (%s, %s, %s)",
+                           array_data)
+
+    def _insert_waveform_sdata(self, cursor: MySQLCursor, wid: int, cav: str, signal_name: str):
+        """Insert the waveform scalar data to the database.
+
+        Args:
+            cursor: A database cursor
+            wid: The unique id of the waveform
+            cav: The name of the cavity ("R123")
+            signal_name: The name of the signal ("GMES")
+        """
+
+        data = []
+        for metric_name, value in self.analysis_scalar[cav][signal_name].items():
+            data.append((wid, metric_name, value))
+        cursor.executemany("INSERT INTO waveform_sdata (wid, name, value) VALUES (%s, %s, %s)", data)
+
+    def _insert_scan_fdata(self, cursor: MySQLCursor, sid: int):
+        """Insert the float data associated with this scan into the database.
+
+        Args:
+            cursor: A database cursor
+            sid: The unique database scan ID
+        """
+        data = []
+        for key, value in self.scan_data_float.items():
+            data.append((sid, key, value))
+
+        if len(data) > 0:
+            cursor.executemany("INSERT INTO scan_fdata (sid, name, value) VALUES (%s, %s, %s)", data)
+
+    def _insert_scan_sdata(self, cursor: MySQLCursor, sid: int):
+        """Insert the string data associated with this scan into the database.
+
+        Args:
+            cursor: A database cursor
+            sid: The unique database scan ID
+        """
+        data = []
+        for key, value in self.scan_data_str.items():
+            data.append((sid, key, value))
+        if len(data) > 0:
+            cursor.executemany("INSERT INTO scan_sdata (sid, name, value) VALUES (%s, %s, %s)", data)
 
     @staticmethod
     def analyze_signal(arr, sampling_rate=5000) -> Tuple[dict, dict]:
@@ -323,9 +368,9 @@ class Query:
 
         # Note that in the database, array names are specified by the "process" that generated them.
         rows = self.db.query_waveform_data(self.scan_meta.sid.values.tolist(), signal_names=self.signal_names,
-                             process_names=self.array_names)
+                                           process_names=self.array_names)
         self.wf_data = pd.DataFrame(rows)
 
         rows = self.db.query_waveform_metadata(self.scan_meta.sid.values.tolist(), signal_names=self.signal_names,
-                                     metric_names=self.wf_metric_names)
+                                               metric_names=self.wf_metric_names)
         self.wf_meta = pd.DataFrame(rows)
