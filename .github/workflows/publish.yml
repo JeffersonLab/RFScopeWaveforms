@@ -64,8 +64,8 @@ jobs:
           pip install -e .[dev]
           pip install cibuildwheel
       - name: Build
-        run: |
 #          python -m build
+        run: |
           cibuildwheel --platform linux
           sphinx-build -b html docsrc/source build/docs
       - name: Deploy Docs
