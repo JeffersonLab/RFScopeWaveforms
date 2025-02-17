@@ -11,7 +11,7 @@ import pandas as pd
 from numpy import ndarray
 from scipy.signal import periodogram
 
-from .db import WaveformDB
+from .db import WaveformDB, QueryFilter
 from .utils import get_datetime_as_utc
 
 
@@ -122,6 +122,7 @@ class Scan:
             cursor.execute("SELECT LAST_INSERT_ID()")
             sid = cursor.fetchone()[0]
 
+            # pylint:
             for cav in self.waveform_data:
                 for signal_name in self.waveform_data[cav]:
                     if signal_name == "Time":
@@ -168,7 +169,7 @@ class Scan:
         """
         # Append the array data for the waveform.  'raw' is not an analytical waveform and needs to be done separately
         array_data = [(wid, "raw", json.dumps(self.waveform_data[cav][signal_name].tolist()))]
-        for arr_name, array in self.analysis_array[cav][signal_name].items():
+        for arr_name in self.analysis_array[cav][signal_name].keys():
             array_data.append(
                 (wid, arr_name, json.dumps(self.analysis_array[cav][signal_name][arr_name].tolist())))
 
@@ -245,34 +246,24 @@ class Scan:
         # basic statistics
         min_val = np.min(arr)
         max_val = np.max(arr)
-        peak_to_peak = max_val - min_val
-        mean = np.mean(arr)
-        median = np.median(arr)
-        std_dev = np.std(arr)
-        rms = np.sqrt(np.mean(np.square(arr)))
-        q25 = np.percentile(arr, 25)
-        q75 = np.percentile(arr, 75)
 
         # power spectrum analysis using Welch's method
-        f, Pxx_den = periodogram(arr, sampling_rate)
-
-        # find dominant frequency
-        dominant_freq = f[np.argmax(Pxx_den)]
+        f, pxx_den = periodogram(arr, sampling_rate)
 
         scalars = {
             "minimum": min_val,
             "maximum": max_val,
-            "peak_to_peak": peak_to_peak,
-            "mean": mean,
-            "median": median,
-            "standard_deviation": std_dev,
-            "rms": rms,
-            "25th_quartile": q25,
-            "75th_quartile": q75,
-            "dominant_frequency": dominant_freq
+            "peak_to_peak": max_val - min_val,
+            "mean": np.mean(arr),
+            "median": np.median(arr),
+            "standard_deviation": np.std(arr),
+            "rms":  np.sqrt(np.mean(np.square(arr))),
+            "25th_quartile": np.percentile(arr, 25),
+            "75th_quartile": np.percentile(arr, 75),
+            "dominant_frequency": f[np.argmax(pxx_den)]
         }
         arrays: dict[str, ndarray] = {
-            "power_spectrum": Pxx_den,
+            "power_spectrum": pxx_den,
             "frequencies": f
         }
 
@@ -311,11 +302,7 @@ class Query:
                  wf_metric_names: Optional[List[str]] = None):
         """Construct a query object with the information needed to query scan and waveform data.
 
-        The three scan_filter_* parameters work in conjunction.  The must be list-like objects of the same length.  At
-        a given index, a filter is later constructed such that "<param> <op> <value>" is used in a SQL WHERE clause.
-        For example, if scan_filter_params = ['R123GMES', 'R223GMES'], scan_filter_ops = ['>', '<'], and
-        scan_filter_values = [5, 2], then each scan included in the query must meet the following criteria:
-            R123GMES > 5 AND R223GMES < 2
+        The three scan_filter_* parameters are used to create a QueryFilter.  See db.QueryFilter for more details.
 
         Args:
             db: A WaveFromDB object that contains an active connection to the database.
@@ -339,9 +326,10 @@ class Query:
         self.array_names = array_names
         self.begin = begin
         self.end = end
-        self.scan_filter_params = scan_filter_params
-        self.scan_filter_ops = scan_filter_ops
-        self.scan_filter_values = scan_filter_values
+        if scan_filter_params is not None or scan_filter_ops is not None or scan_filter_values is not None:
+            self.scan_filter = QueryFilter(scan_filter_params, scan_filter_ops, scan_filter_values)
+        else:
+            self.scan_filter = None
         self.wf_metric_names = wf_metric_names
 
         self.staged = False
@@ -352,8 +340,7 @@ class Query:
     def stage(self):
         """Perform the initial query to determine which scans meet the requested criteria."""
 
-        scan_rows = self.db.query_scan_rows(begin=self.begin, end=self.end, filter_params=self.scan_filter_params,
-                                            filter_ops=self.scan_filter_ops, filter_values=self.scan_filter_values)
+        scan_rows = self.db.query_scan_rows(begin=self.begin, end=self.end, q_filter=self.scan_filter)
         self.scan_meta = pd.DataFrame(scan_rows, index=None)
         self.staged = True
 

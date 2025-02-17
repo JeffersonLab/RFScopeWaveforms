@@ -8,8 +8,51 @@ import mysql.connector
 from .utils import get_datetime_as_utc
 
 
-class WaveformDB:
+class QueryFilter:
     valid_ops = (">", "<", "=", "!=", ">=", "<=")
+
+    def __init__(self, filter_params, filter_ops, filter_values):
+        """An object that contains the filter rules to be applied to a database query.
+
+        The three filter_* parameters work in conjunction.  The must be list-like objects of the same length.  At
+        a given index, a filter is later constructed such that "<param> <op> <value>" is used in a SQL WHERE clause.
+        For example, if filter_params = ['R123GMES', 'R223GMES'], filter_ops = ['>', '<'], and
+        filter_values = [5, 2], then each scan included in the query must meet the following criteria:
+            R123GMES > 5 AND R223GMES < 2
+
+        Args:
+            filter_params: The name of the scan metadata to be filtered on (i.e., PV name).  If None, no filtering is
+                           applied.
+            filter_ops: The type of comparison to be made.  Supported ops are {self.valid_ops}. If None, no filtering is
+                           applied.
+            filter_values: The value to be compared against.  The comparisons are sanitized, but essentially follow
+                           the <filter_param> <filter_op> <filter_value> pattern, e.g., R123GMES >= 2.0.  If None, no
+                           filtering is applied
+        """
+
+        if (filter_params is not None) or (filter_ops is not None) or (filter_values is not None):
+            if (len(filter_params) != len(filter_values)) or (len(filter_params) != len(filter_ops)):
+                raise ValueError("Filter_params must have same length as filter_ops and filter_values.")
+
+        self.params = filter_params
+        self.ops = filter_ops
+        self.values = filter_values
+        self.validate_ops()
+
+    def validate_ops(self):
+        """Validate the selected database comparison operations against a pre-approved list.
+
+        Raises:
+            ValueError: If any item from filter_ops is an unsupported comparison.
+        """
+        # Validate the op clause.  The others can be part of standard prepared statement sanitization
+        if self.ops is not None and len(self.ops) > 0:
+            for op in self.ops:
+                if op not in self.valid_ops:
+                    raise ValueError(f"Invalid operation {op}")
+
+
+class WaveformDB:
 
     def __init__(self, host, user, password, port: int = 3306, database="scope_waveforms"):
         self.host = host
@@ -32,25 +75,8 @@ class WaveformDB:
         if self.conn is not None:
             self.conn.close()
 
-    @classmethod
-    def validate_ops(cls, filter_ops: List[str]):
-        """Validate the selected database comparison operations against a pre-approved list.
-
-        Args:
-            filter_ops (List[str]): List of database comparison operations to validate.
-
-        Raises:
-            ValueError: If any item from filter_ops is an unsupported comparison.
-        """
-        # Validate the op clause.  The others can be part of standard prepared statement sanitization
-        if filter_ops is not None and len(filter_ops) > 0:
-            for op in filter_ops:
-                if op not in cls.valid_ops:
-                    raise ValueError(f"Invalid operation {op}")
-
-    def query_scan_rows(self, begin: datetime = None, end: datetime = None,
-                        filter_params: List[str] = None, filter_ops: List[str] = None,
-                        filter_values: List[Union[float, str]] = None) -> List[Dict[str, Any]]:
+    def query_scan_rows(self, begin: datetime = None, end: datetime = None, q_filter: QueryFilter = None
+                        ) -> List[Dict[str, Any]]:
         f"""Query scan data (sans waveforms) from the database and return it in an easy to process format.
         
         Note all filter_* parameters must be of the same length.
@@ -58,20 +84,14 @@ class WaveformDB:
         Args:
             begin: The earliest scan start time for scans to be returned.  If None, there is no earliest cutoff.
             end: The latest scan start time for scans to be returned.  If None, there is no latest cutoff.
-            filter_params: The name of the scan metadata to be filtered on (i.e., PV name).  If None, no filtering is
-                           applied.
-            filter_ops: The type of comparison to be made.  Supported ops are {self.valid_ops}. If None, no filtering is
-                           applied.
-            filter_values: The value to be compared against.  The comparisons are sanitized, but essentially follow
-                           the <filter_param> <filter_op> <filter_value> pattern, e.g., R123GMES >= 2.0.  If None, no 
-                           filtering is applied
+            q_filter: The filter to apply to the scan data.
+
                            
         Returns:
             A list of dictionaries containing the data for a single scan including metadata.
         """
 
-        self.validate_ops(filter_ops)
-        filters, data = self.get_scan_join_clauses(begin, end, filter_params, filter_ops, filter_values)
+        filters, data = self.get_scan_join_clauses(begin, end, q_filter)
 
         sub_sql = f"SELECT scan.* FROM scan \n{filters}"
         s_sql = f"""
@@ -248,7 +268,6 @@ class WaveformDB:
         sql = ""
         data = []
         for idx, item in enumerate(tests):
-            WaveformDB.validate_ops([item[1]])
             data.append(item[0])
             data.append(item[2])
             table = "scan_fdata"
@@ -259,22 +278,17 @@ class WaveformDB:
         return sql, data
 
     @classmethod
-    def get_scan_join_clauses(cls, begin: datetime, end: datetime, filter_params: List[str], filter_ops: List[str],
-                              filter_values: List[Union[float, str]]) -> tuple[str, List[str]]:
+    def get_scan_join_clauses(cls, begin: datetime, end: datetime, q_filter: QueryFilter) -> tuple[str, List[str]]:
         f"""Generates JOIN/WHERE clauses for efficiently filtering scans by its metadata.
 
         Args:
             begin: The earliest scan start time
             end: The latest scan end time
-            filter_params: List of parameter names of scan meta data on which to filter
-            filter_ops: List of operations to apply to filter.  Valid: {cls.valid_ops}
-            filter_values: List of values to compare filter_params on using filter_ops.
+            q_filter: The filter to apply to the query
 
         Returns:
             A string of JOIN/WHERE statements 
         """
-        cls.validate_ops(filter_ops)
-
         # scan_tests, meta_tests = WaveformDB.get_tests(begin, end, filter_params, filter_ops, filter_values)
         # print(scan_tests)
 
@@ -282,11 +296,8 @@ class WaveformDB:
 
         # Process the other filters on scan metadata.  Split up the string based values from the numeric values since
         # they are in different tables.
-        if filter_params is not None:
-            if (len(filter_params) != len(filter_values)) or (len(filter_params) != len(filter_ops)):
-                raise ValueError("Filter_params must have same length as filter_ops and filter_values.")
-
-            for item in zip(filter_params, filter_ops, filter_values):
+        if q_filter is not None and q_filter.params is not None:
+            for item in zip(q_filter.params, q_filter.ops, q_filter.values):
                 meta_tests.append((item[0], item[1], item[2]))
 
         sql, data = WaveformDB.gen_scan_join_statements(meta_tests)

@@ -6,6 +6,8 @@ import numpy as np
 from rfscopedb.db import WaveformDB
 from rfscopedb.data_model import Scan
 
+from src.rfscopedb.db import QueryFilter
+
 
 class TestDB(unittest.TestCase):
     db = WaveformDB(host='localhost', user='scope_rw', password='password')
@@ -78,7 +80,7 @@ class TestDB(unittest.TestCase):
         # Test that date filters + single metadata filter work
         out = TestDB.db.query_scan_rows(begin=datetime.strptime("2020-06-01", "%Y-%m-%d"),
                                         end=datetime.strptime("2022-06-01", "%Y-%m-%d"),
-                                        filter_params=["c", ], filter_ops=["=", ], filter_values=["off", ])
+                                        q_filter=QueryFilter(["c", ], ["=", ], ["off", ]))
         exp = [{'sid': 2,
                 'scan_start_utc': datetime(2021, 1, 1, 6, 23, 45, 123456),
                 's_c': 'off',
@@ -93,8 +95,7 @@ class TestDB(unittest.TestCase):
         # Test that date filters + multiple metadata filters work
         out = TestDB.db.query_scan_rows(begin=datetime.strptime("2019-06-01", "%Y-%m-%d"),
                                         end=datetime.strptime("2023-06-01", "%Y-%m-%d"),
-                                        filter_params=["a", "b", "c"], filter_ops=["<", "<", "="],
-                                        filter_values=[2, 3, "on"])
+                                        q_filter=QueryFilter(["a", "b", "c"], ["<", "<", "="], [2, 3, "on"]))
         exp = [{'sid': 1,
                 'scan_start_utc': datetime(2020, 1, 1, 6, 23, 45, 123456),
                 's_c': 'on', 'f_a': 1.0, 'f_b': 2.0, 'f_c': 100.0},
@@ -110,8 +111,8 @@ class TestDB(unittest.TestCase):
 
         out = TestDB.db.query_scan_rows(begin=datetime.strptime("2019-06-01", "%Y-%m-%d"),
                                         end=datetime.strptime("2023-06-01", "%Y-%m-%d"),
-                                        filter_params=["a", "b", "c", "c"], filter_ops=["<", "<", "=", "="],
-                                        filter_values=[2, 3, 100, "on"])
+                                        q_filter=QueryFilter(["a", "b", "c", "c"], ["<", "<", "=", "="],
+                                                             [2, 3, 100, "on"]))
         exp = [{'sid': 1,
                 'scan_start_utc': datetime(2020, 1, 1, 6, 23, 45, 123456),
                 's_c': 'on', 'f_a': 1.0, 'f_b': 2.0, 'f_c': 100.0
