@@ -1,0 +1,269 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>rfscopedb.db.WaveformDB &mdash; rfscopedb  documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=e59714d7" />
+
+  
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=5929fcd5"></script>
+      <script src="../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="rfscopedb.utils" href="rfscopedb.utils.html" />
+    <link rel="prev" title="rfscopedb.db" href="rfscopedb.db.html" />
+<link href="../_static/rtd_custom.css" rel="stylesheet" type="text/css">
+
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            rfscopedb
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="rfscopedb.html">rfscopedb</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="rfscopedb.data_model.html">rfscopedb.data_model</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="rfscopedb.db.html">rfscopedb.db</a><ul class="current">
+<li class="toctree-l3 current"><a class="current reference internal" href="#">rfscopedb.db.WaveformDB</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#rfscopedb.db.WaveformDB"><code class="docutils literal notranslate"><span class="pre">WaveformDB</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="rfscopedb.utils.html">rfscopedb.utils</a></li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">rfscopedb</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="rfscopedb.html">rfscopedb</a></li>
+          <li class="breadcrumb-item"><a href="rfscopedb.db.html">rfscopedb.db</a></li>
+      <li class="breadcrumb-item active">rfscopedb.db.WaveformDB</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/_autosummary/rfscopedb.db.WaveformDB.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="rfscopedb-db-waveformdb">
+<h1>rfscopedb.db.WaveformDB<a class="headerlink" href="#rfscopedb-db-waveformdb" title="Link to this heading"></a></h1>
+<dl class="py class">
+<dt class="sig sig-object py" id="rfscopedb.db.WaveformDB">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">rfscopedb.db.</span></span><span class="sig-name descname"><span class="pre">WaveformDB</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">host</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">user</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">password</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">port</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">3306</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">database</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'scope_waveforms'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/rfscopedb/db.html#WaveformDB"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#rfscopedb.db.WaveformDB" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="rfscopedb.db.WaveformDB.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">host</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">user</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">password</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">port</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">3306</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">database</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'scope_waveforms'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/rfscopedb/db.html#WaveformDB.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#rfscopedb.db.WaveformDB.__init__" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<p class="rubric">Methods</p>
+<table class="autosummary longtable docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#rfscopedb.db.WaveformDB.__init__" title="rfscopedb.db.WaveformDB.__init__"><code class="xref py py-obj docutils literal notranslate"><span class="pre">__init__</span></code></a>(host, user, password[, port, database])</p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#rfscopedb.db.WaveformDB.delete_scans" title="rfscopedb.db.WaveformDB.delete_scans"><code class="xref py py-obj docutils literal notranslate"><span class="pre">delete_scans</span></code></a>(sid)</p></td>
+<td><p>Delete a single scan and all associated data (including waveforms) from the database.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#rfscopedb.db.WaveformDB.gen_scan_join_statements" title="rfscopedb.db.WaveformDB.gen_scan_join_statements"><code class="xref py py-obj docutils literal notranslate"><span class="pre">gen_scan_join_statements</span></code></a>(tests)</p></td>
+<td><p>Generate a JOIN/WHERE statement that will filter out scan IDs that don't match the given test.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_scan_join_clauses</span></code>(begin, end, ...)</p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">query_scan_rows</span></code>([begin, end, filter_params, ...])</p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#rfscopedb.db.WaveformDB.query_waveform_data" title="rfscopedb.db.WaveformDB.query_waveform_data"><code class="xref py py-obj docutils literal notranslate"><span class="pre">query_waveform_data</span></code></a>(sids, signal_names, ...)</p></td>
+<td><p>Queries the waveform array data for a given set of sids, signal_names, and process_names.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#rfscopedb.db.WaveformDB.query_waveform_metadata" title="rfscopedb.db.WaveformDB.query_waveform_metadata"><code class="xref py py-obj docutils literal notranslate"><span class="pre">query_waveform_metadata</span></code></a>(sids, signal_names, ...)</p></td>
+<td><p>Queries the waveform scalar metadata for a given set of sids, signal_names, and metric names.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#rfscopedb.db.WaveformDB.validate_ops" title="rfscopedb.db.WaveformDB.validate_ops"><code class="xref py py-obj docutils literal notranslate"><span class="pre">validate_ops</span></code></a>(filter_ops)</p></td>
+<td><p>Validate the selected database comparison operations against a pre-approved list.</p></td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Attributes</p>
+<table class="autosummary longtable docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">valid_ops</span></code></p></td>
+<td><p></p></td>
+</tr>
+</tbody>
+</table>
+<dl class="py method">
+<dt class="sig sig-object py" id="rfscopedb.db.WaveformDB.delete_scans">
+<span class="sig-name descname"><span class="pre">delete_scans</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sid</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/rfscopedb/db.html#WaveformDB.delete_scans"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#rfscopedb.db.WaveformDB.delete_scans" title="Link to this definition"></a></dt>
+<dd><p>Delete a single scan and all associated data (including waveforms) from the database.</p>
+<p>Note: this requires DELETE permissions which may not be available on standard usage.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>sid</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></span>) – The scan ID of the scan to be deleted</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></span></p>
+</dd>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>The number of deleted scans.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="rfscopedb.db.WaveformDB.gen_scan_join_statements">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">gen_scan_join_statements</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tests</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/rfscopedb/db.html#WaveformDB.gen_scan_join_statements"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#rfscopedb.db.WaveformDB.gen_scan_join_statements" title="Link to this definition"></a></dt>
+<dd><p>Generate a JOIN/WHERE statement that will filter out scan IDs that don’t match the given test.</p>
+<p>Note: this method checks the type of the comparison target and builds the SQL statement around the table for
+that type.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>tests</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">List</span></code>[<code class="xref py py-data docutils literal notranslate"><span class="pre">Tuple</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-data docutils literal notranslate"><span class="pre">Any</span></code>]]</span>) – A List of 3-tuples of format (metadata_name, comparison, comparison_target), e.g.
+(“R2XXITOT”, “&gt;=”, “10.0”)</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Tuple</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">List</span></code>[<code class="xref py py-data docutils literal notranslate"><span class="pre">Any</span></code>]]</span></p>
+</dd>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Two items, the compound JOIN statement and a list of data values to be used in the prepared statement query</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="rfscopedb.db.WaveformDB.query_waveform_data">
+<span class="sig-name descname"><span class="pre">query_waveform_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sids</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">signal_names</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">process_names</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/rfscopedb/db.html#WaveformDB.query_waveform_data"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#rfscopedb.db.WaveformDB.query_waveform_data" title="Link to this definition"></a></dt>
+<dd><p>Queries the waveform array data for a given set of sids, signal_names, and process_names.</p>
+<p>Results are stored internal to this object.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>sids</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">List</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>]</span>) – A list of scan database identifiers to query waveform data</p></li>
+<li><p><strong>signal_names</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">List</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>]]</span>) – A list of the signal names to include data from  (GMES, PMES, etc.).  If None, all signals are
+queried.</p></li>
+<li><p><strong>process_names</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">List</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>]]</span>) – A list of the process names to include data from (names of array transforms, e.g. raw
+or power_spectrum). If None, all array types are queried.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">List</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">Dict</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-data docutils literal notranslate"><span class="pre">Any</span></code>]]</span></p>
+</dd>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>A list of dictionaries each containing the data for a single array of raw or process data from a waveform.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="rfscopedb.db.WaveformDB.query_waveform_metadata">
+<span class="sig-name descname"><span class="pre">query_waveform_metadata</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sids</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">signal_names</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">metric_names</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/rfscopedb/db.html#WaveformDB.query_waveform_metadata"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#rfscopedb.db.WaveformDB.query_waveform_metadata" title="Link to this definition"></a></dt>
+<dd><p>Queries the waveform scalar metadata for a given set of sids, signal_names, and metric names.</p>
+<p>Results are stored internal to this object.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>sids</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">List</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>]</span>) – A list of scan database identifiers to query waveform data</p></li>
+<li><p><strong>signal_names</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">List</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>]</span>) – A list of the signal names to include data from  (GMES, PMES, etc.)</p></li>
+<li><p><strong>metric_names</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">List</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>]</span>) – A list of the scalar metad to include in the output (mean, median, etc.).  If None, get all.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">List</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">Dict</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-data docutils literal notranslate"><span class="pre">Any</span></code>]]</span></p>
+</dd>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>A list of dictionaries each containing the scalar metadata for a single waveform.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="rfscopedb.db.WaveformDB.validate_ops">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">validate_ops</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">filter_ops</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/rfscopedb/db.html#WaveformDB.validate_ops"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#rfscopedb.db.WaveformDB.validate_ops" title="Link to this definition"></a></dt>
+<dd><p>Validate the selected database comparison operations against a pre-approved list.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>filter_ops</strong> (<em>List</em><em>[</em><em>str</em><em>]</em>) – List of database comparison operations to validate.</p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>ValueError</strong> – If any item from filter_ops is an unsupported comparison.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="rfscopedb.db.html" class="btn btn-neutral float-left" title="rfscopedb.db" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="rfscopedb.utils.html" class="btn btn-neutral float-right" title="rfscopedb.utils" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2025, Adam Carpenter.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
