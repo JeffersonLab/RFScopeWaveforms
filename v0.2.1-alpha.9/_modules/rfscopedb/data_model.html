@@ -1,0 +1,469 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>rfscopedb.data_model &mdash; rfscopedb  documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=e59714d7" />
+
+  
+      <script src="../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
+      <script src="../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+<link href="../../_static/rtd_custom.css" rel="stylesheet" type="text/css">
+
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            rfscopedb
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../_autosummary/rfscopedb.html">rfscopedb</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">rfscopedb</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">rfscopedb.data_model</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for rfscopedb.data_model</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span><span class="w"> </span><span class="nn">json</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">datetime</span><span class="w"> </span><span class="kn">import</span> <span class="n">datetime</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">Any</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Union</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">mysql.connector</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="kn">import</span> <span class="n">ndarray</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">scipy.signal</span><span class="w"> </span><span class="kn">import</span> <span class="n">periodogram</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">.db</span><span class="w"> </span><span class="kn">import</span> <span class="n">WaveformDB</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_datetime_as_utc</span>
+
+
+<div class="viewcode-block" id="Scan">
+<a class="viewcode-back" href="../../_autosummary/rfscopedb.data_model.Scan.html#rfscopedb.data_model.Scan">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">Scan</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;This class contains all the data from a scan of waveform data from one or more RF cavities and related logic.</span>
+
+<span class="sd">    This class will store raw waveform data, generate collections of derivative data about each waveform, and hold</span>
+<span class="sd">    additional data related to system state at the time of the scan.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="Scan.__init__">
+<a class="viewcode-back" href="../../_autosummary/rfscopedb.data_model.Scan.html#rfscopedb.data_model.Scan.__init__">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dt</span><span class="p">:</span> <span class="n">datetime</span><span class="p">,</span> <span class="n">sid</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Construct an instance and initialize data attributes</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            dt: The date and time the scan was started</span>
+<span class="sd">            sid: The unique database scan ID for this object.  None implies that the object was not read from the</span>
+<span class="sd">                 database.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">id</span> <span class="o">=</span> <span class="n">sid</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dt</span> <span class="o">=</span> <span class="n">dt</span>
+
+        <span class="c1"># self.waveform_data will be structured as {</span>
+        <span class="c1">#   {</span>
+        <span class="c1">#     &lt;cav_name1&gt;: {&lt;signal_name1&gt;: [val1, val2, ... ], &lt;signal_name2&gt;: [val1, val2, ...]}, ...,</span>
+        <span class="c1">#     &lt;cav_name2&gt;: {&lt;signal_name1&gt;: [val1, val2, ... ], &lt;signal_name2&gt;: [val1, val2, ...]}, ...,</span>
+        <span class="c1">#     ...</span>
+        <span class="c1">#   }</span>
+        <span class="c1"># }</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">waveform_data</span> <span class="o">=</span> <span class="p">{}</span>
+
+        <span class="c1"># self.sampling_frequency will be structured</span>
+        <span class="c1"># {</span>
+        <span class="c1">#   &lt;cav_name1&gt;: sampling_freq1,</span>
+        <span class="c1">#   &lt;cav_name1&gt;: sampling_freq2,</span>
+        <span class="c1">#   ...</span>
+        <span class="c1"># }</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">sampling_rate</span> <span class="o">=</span> <span class="p">{}</span>
+
+        <span class="c1"># self.analysis_scalar and self.analysis_array will be structure this where one will hold scalar values and the</span>
+        <span class="c1"># other will hold np.array values</span>
+        <span class="c1">#   {</span>
+        <span class="c1">#     &lt;cav_name1&gt;: {&lt;signal_name1&gt;: {&lt;metric1&gt;: value, &lt;metric2&gt;: value}, &lt;signal_name2&gt;: {&lt;metric1&gt;...}},</span>
+        <span class="c1">#     &lt;cav_name2&gt;: {&lt;signal_name1&gt;: {&lt;metric1&gt;: value, &lt;metric2&gt;: value}, &lt;signal_name2&gt;: {&lt;metric1&gt;...}},</span>
+        <span class="c1">#     ...</span>
+        <span class="c1">#   }</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">analysis_scalar</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">analysis_array</span> <span class="o">=</span> <span class="p">{}</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">scan_data_float</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">scan_data_str</span> <span class="o">=</span> <span class="p">{}</span></div>
+
+
+<div class="viewcode-block" id="Scan.add_scan_data">
+<a class="viewcode-back" href="../../_autosummary/rfscopedb.data_model.Scan.html#rfscopedb.data_model.Scan.add_scan_data">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">add_scan_data</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">float_data</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">float</span><span class="p">],</span> <span class="n">str_data</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Add data that applies to the entire scan and not a specific waveform.  There can be no overlap in keys.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            float_data: A dictionary containing numeric data relating to the scan. Keys are data names (e.g. R1XXITOT)</span>
+<span class="sd">            str_data: A dictionary containing textual data relating to the scan. Keys are data names. Useful for ENUMS.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">float_data</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+            <span class="k">if</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">str_data</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;A metadata name may only appear once in either the float or str data. (&#39;</span><span class="si">{</span><span class="n">k</span><span class="si">}</span><span class="s2">&#39;)&quot;</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">scan_data_float</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">float_data</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">scan_data_str</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">str_data</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Scan.add_cavity_data">
+<a class="viewcode-back" href="../../_autosummary/rfscopedb.data_model.Scan.html#rfscopedb.data_model.Scan.add_cavity_data">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">add_cavity_data</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cavity</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">data</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">],</span> <span class="n">sampling_rate</span><span class="p">:</span> <span class="nb">float</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Add waveform data to this scan for a given cavity.  Analysis of the waveform values are done here.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            cavity: The name of the cavity (&quot;R123&quot;)</span>
+<span class="sd">            data: Dictionary keyed on signal name (&quot;Time&quot;, &quot;GMES&quot;, etc.) with numpy arrays containing signal data</span>
+<span class="sd">            sampling_rate: The sampling rate of the data given in Hertz (e.g. 5000 for 5 kHz).</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">waveform_data</span><span class="p">[</span><span class="n">cavity</span><span class="p">]</span> <span class="o">=</span> <span class="n">data</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">analysis_scalar</span><span class="p">[</span><span class="n">cavity</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">analysis_array</span><span class="p">[</span><span class="n">cavity</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">sampling_rate</span><span class="p">[</span><span class="n">cavity</span><span class="p">]</span> <span class="o">=</span> <span class="n">sampling_rate</span>
+
+        <span class="k">for</span> <span class="n">signal_name</span> <span class="ow">in</span> <span class="n">data</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+            <span class="c1"># Time is reflected in the sampling rate and can be ignored for analysis purposes</span>
+            <span class="k">if</span> <span class="n">signal_name</span> <span class="o">==</span> <span class="s2">&quot;Time&quot;</span><span class="p">:</span>
+                <span class="k">continue</span>
+
+            <span class="n">scalars</span><span class="p">,</span> <span class="n">arrays</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">analyze_signal</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="n">signal_name</span><span class="p">],</span> <span class="n">sampling_rate</span><span class="o">=</span><span class="n">sampling_rate</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">analysis_scalar</span><span class="p">[</span><span class="n">cavity</span><span class="p">][</span><span class="n">signal_name</span><span class="p">]</span> <span class="o">=</span> <span class="n">scalars</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">analysis_array</span><span class="p">[</span><span class="n">cavity</span><span class="p">][</span><span class="n">signal_name</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+            <span class="k">for</span> <span class="n">arr_name</span><span class="p">,</span> <span class="n">array</span> <span class="ow">in</span> <span class="n">arrays</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">analysis_array</span><span class="p">[</span><span class="n">cavity</span><span class="p">][</span><span class="n">signal_name</span><span class="p">][</span><span class="n">arr_name</span><span class="p">]</span> <span class="o">=</span> <span class="n">array</span></div>
+
+
+<div class="viewcode-block" id="Scan.insert_data">
+<a class="viewcode-back" href="../../_autosummary/rfscopedb.data_model.Scan.html#rfscopedb.data_model.Scan.insert_data">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">insert_data</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">conn</span><span class="p">:</span> <span class="n">mysql</span><span class="o">.</span><span class="n">connector</span><span class="o">.</span><span class="n">MySQLConnection</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Insert all data related to this Scan into the database</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            conn: Connection to the database</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">scan_time</span> <span class="o">=</span> <span class="n">get_datetime_as_utc</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dt</span><span class="p">)</span>
+        <span class="n">cursor</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="c1"># Transaction started by default since autocommit is off.</span>
+            <span class="n">cursor</span> <span class="o">=</span> <span class="n">conn</span><span class="o">.</span><span class="n">cursor</span><span class="p">()</span>
+            <span class="c1"># Note: execute and executemany do sanitation and prepared statements internally.</span>
+            <span class="n">cursor</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="s2">&quot;INSERT INTO scan (scan_start_utc)  VALUES (</span><span class="si">%s</span><span class="s2">)&quot;</span><span class="p">,</span>
+                           <span class="p">(</span><span class="n">scan_time</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span><span class="s1">&#39;%Y-%m-</span><span class="si">%d</span><span class="s1"> %H:%M:%S.</span><span class="si">%f</span><span class="s1">&#39;</span><span class="p">),))</span>
+            <span class="n">cursor</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="s2">&quot;SELECT LAST_INSERT_ID()&quot;</span><span class="p">)</span>
+            <span class="n">sid</span> <span class="o">=</span> <span class="n">cursor</span><span class="o">.</span><span class="n">fetchone</span><span class="p">()[</span><span class="mi">0</span><span class="p">]</span>
+
+            <span class="k">for</span> <span class="n">cav</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">waveform_data</span><span class="p">:</span>
+                <span class="k">for</span> <span class="n">signal_name</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">waveform_data</span><span class="p">[</span><span class="n">cav</span><span class="p">]:</span>
+                    <span class="k">if</span> <span class="n">signal_name</span> <span class="o">==</span> <span class="s2">&quot;Time&quot;</span><span class="p">:</span>
+                        <span class="k">continue</span>
+                    <span class="n">waveform_data</span> <span class="o">=</span> <span class="p">(</span><span class="n">sid</span><span class="p">,</span> <span class="n">cav</span><span class="p">,</span> <span class="n">signal_name</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">sampling_rate</span><span class="p">[</span><span class="n">cav</span><span class="p">])</span>
+                    <span class="n">cursor</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="s2">&quot;INSERT INTO waveform(sid, cavity, signal_name, sample_rate_hz) VALUES (</span><span class="si">%s</span><span class="s2">, </span><span class="si">%s</span><span class="s2">, </span><span class="si">%s</span><span class="s2">, </span><span class="si">%s</span><span class="s2">)&quot;</span><span class="p">,</span>
+                                   <span class="n">waveform_data</span><span class="p">)</span>
+                    <span class="n">cursor</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="s2">&quot;SELECT LAST_INSERT_ID()&quot;</span><span class="p">)</span>
+                    <span class="n">wid</span> <span class="o">=</span> <span class="n">cursor</span><span class="o">.</span><span class="n">fetchone</span><span class="p">()[</span><span class="mi">0</span><span class="p">]</span>
+
+                    <span class="c1"># Append the array data for the waveform</span>
+                    <span class="n">array_data</span> <span class="o">=</span> <span class="p">[(</span><span class="n">wid</span><span class="p">,</span> <span class="s2">&quot;raw&quot;</span><span class="p">,</span> <span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">waveform_data</span><span class="p">[</span><span class="n">cav</span><span class="p">][</span><span class="n">signal_name</span><span class="p">]</span><span class="o">.</span><span class="n">tolist</span><span class="p">()))]</span>
+                    <span class="k">for</span> <span class="n">arr_name</span><span class="p">,</span> <span class="n">array</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">analysis_array</span><span class="p">[</span><span class="n">cav</span><span class="p">][</span><span class="n">signal_name</span><span class="p">]</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                        <span class="n">array_data</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                            <span class="p">(</span><span class="n">wid</span><span class="p">,</span> <span class="n">arr_name</span><span class="p">,</span> <span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">analysis_array</span><span class="p">[</span><span class="n">cav</span><span class="p">][</span><span class="n">signal_name</span><span class="p">][</span><span class="n">arr_name</span><span class="p">]</span><span class="o">.</span><span class="n">tolist</span><span class="p">())))</span>
+
+                    <span class="n">cursor</span><span class="o">.</span><span class="n">executemany</span><span class="p">(</span><span class="s2">&quot;INSERT INTO waveform_adata (wid, process, data) VALUES (</span><span class="si">%s</span><span class="s2">, </span><span class="si">%s</span><span class="s2">, </span><span class="si">%s</span><span class="s2">)&quot;</span><span class="p">,</span> <span class="n">array_data</span><span class="p">)</span>
+
+                    <span class="n">scalar_data</span> <span class="o">=</span> <span class="p">[]</span>
+                    <span class="k">for</span> <span class="n">metric_name</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">analysis_scalar</span><span class="p">[</span><span class="n">cav</span><span class="p">][</span><span class="n">signal_name</span><span class="p">]</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                        <span class="n">scalar_data</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">wid</span><span class="p">,</span> <span class="n">metric_name</span><span class="p">,</span> <span class="n">value</span><span class="p">))</span>
+
+                    <span class="n">cursor</span><span class="o">.</span><span class="n">executemany</span><span class="p">(</span><span class="s2">&quot;INSERT INTO waveform_sdata (wid, name, value) VALUES (</span><span class="si">%s</span><span class="s2">, </span><span class="si">%s</span><span class="s2">, </span><span class="si">%s</span><span class="s2">)&quot;</span><span class="p">,</span>
+                                       <span class="n">scalar_data</span><span class="p">)</span>
+
+            <span class="n">sdf</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">scan_data_float</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                <span class="n">sdf</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">sid</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span><span class="p">))</span>
+
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">sdf</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="n">cursor</span><span class="o">.</span><span class="n">executemany</span><span class="p">(</span><span class="s2">&quot;INSERT INTO scan_fdata (sid, name, value) VALUES (</span><span class="si">%s</span><span class="s2">, </span><span class="si">%s</span><span class="s2">, </span><span class="si">%s</span><span class="s2">)&quot;</span><span class="p">,</span> <span class="n">sdf</span><span class="p">)</span>
+
+            <span class="n">sds</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">scan_data_str</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                <span class="n">sds</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">sid</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span><span class="p">))</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">sds</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="n">cursor</span><span class="o">.</span><span class="n">executemany</span><span class="p">(</span><span class="s2">&quot;INSERT INTO scan_sdata (sid, name, value) VALUES (</span><span class="si">%s</span><span class="s2">, </span><span class="si">%s</span><span class="s2">, </span><span class="si">%s</span><span class="s2">)&quot;</span><span class="p">,</span> <span class="n">sds</span><span class="p">)</span>
+
+            <span class="c1"># Commit the transaction if we were able to successfully insert all the data.  Otherwise, an exception</span>
+            <span class="c1"># should have been raised that was caught to roll back the transaction.</span>
+            <span class="n">conn</span><span class="o">.</span><span class="n">commit</span><span class="p">()</span>
+        <span class="k">except</span> <span class="p">(</span><span class="n">mysql</span><span class="o">.</span><span class="n">connector</span><span class="o">.</span><span class="n">Error</span><span class="p">,</span> <span class="ne">Exception</span><span class="p">)</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">conn</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="c1"># There was a problem so this should roll back the entire transaction across all the tables.</span>
+                <span class="n">conn</span><span class="o">.</span><span class="n">rollback</span><span class="p">()</span>
+            <span class="k">if</span> <span class="n">cursor</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">cursor</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+
+            <span class="c1"># TODO: better logging</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;ERROR: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="c1"># TODO: Alternative to catch and throw?</span>
+
+            <span class="k">raise</span> <span class="n">e</span></div>
+
+
+<div class="viewcode-block" id="Scan.analyze_signal">
+<a class="viewcode-back" href="../../_autosummary/rfscopedb.data_model.Scan.html#rfscopedb.data_model.Scan.analyze_signal">[docs]</a>
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">analyze_signal</span><span class="p">(</span><span class="n">arr</span><span class="p">,</span> <span class="n">sampling_rate</span><span class="o">=</span><span class="mi">5000</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">dict</span><span class="p">,</span> <span class="nb">dict</span><span class="p">]:</span>
+
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Computes basic statistical metrics and power spectrum for a single waveform of length 8192 samples.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            arr (np.array): the array containing data</span>
+<span class="sd">            sampling_rate (float): samping frequency represented by data in Hz</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            Tuple[dict, dict]: dictionary of scalar statistical metrics, dictionary of arrays data</span>
+<span class="sd">                               (e.g. power spectrum array)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">arr</span><span class="p">,</span> <span class="p">(</span><span class="nb">list</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">)):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Input must be a list, numpy array, or tuple. Not </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">arr</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+        <span class="n">arr</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">arr</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">issubdtype</span><span class="p">(</span><span class="n">arr</span><span class="o">.</span><span class="n">dtype</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">number</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Input array must contain only numerical values.&quot;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">arr</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">8192</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Input array must have exactly 8192 elements. Got </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">arr</span><span class="p">)</span><span class="si">}</span><span class="s2"> elements.&quot;</span><span class="p">)</span>
+
+        <span class="c1"># basic statistics</span>
+        <span class="n">min_val</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">arr</span><span class="p">)</span>
+        <span class="n">max_val</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">arr</span><span class="p">)</span>
+        <span class="n">peak_to_peak</span> <span class="o">=</span> <span class="n">max_val</span> <span class="o">-</span> <span class="n">min_val</span>
+        <span class="n">mean</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">arr</span><span class="p">)</span>
+        <span class="n">median</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">median</span><span class="p">(</span><span class="n">arr</span><span class="p">)</span>
+        <span class="n">std_dev</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">std</span><span class="p">(</span><span class="n">arr</span><span class="p">)</span>
+        <span class="n">rms</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">square</span><span class="p">(</span><span class="n">arr</span><span class="p">)))</span>
+        <span class="n">q25</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">percentile</span><span class="p">(</span><span class="n">arr</span><span class="p">,</span> <span class="mi">25</span><span class="p">)</span>
+        <span class="n">q75</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">percentile</span><span class="p">(</span><span class="n">arr</span><span class="p">,</span> <span class="mi">75</span><span class="p">)</span>
+
+        <span class="c1"># power spectrum analysis using Welch&#39;s method</span>
+        <span class="n">f</span><span class="p">,</span> <span class="n">Pxx_den</span> <span class="o">=</span> <span class="n">periodogram</span><span class="p">(</span><span class="n">arr</span><span class="p">,</span> <span class="n">sampling_rate</span><span class="p">)</span>
+
+        <span class="c1"># find dominant frequency</span>
+        <span class="n">dominant_freq</span> <span class="o">=</span> <span class="n">f</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">argmax</span><span class="p">(</span><span class="n">Pxx_den</span><span class="p">)]</span>
+
+        <span class="n">scalars</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s2">&quot;minimum&quot;</span><span class="p">:</span> <span class="n">min_val</span><span class="p">,</span>
+            <span class="s2">&quot;maximum&quot;</span><span class="p">:</span> <span class="n">max_val</span><span class="p">,</span>
+            <span class="s2">&quot;peak_to_peak&quot;</span><span class="p">:</span> <span class="n">peak_to_peak</span><span class="p">,</span>
+            <span class="s2">&quot;mean&quot;</span><span class="p">:</span> <span class="n">mean</span><span class="p">,</span>
+            <span class="s2">&quot;median&quot;</span><span class="p">:</span> <span class="n">median</span><span class="p">,</span>
+            <span class="s2">&quot;standard_deviation&quot;</span><span class="p">:</span> <span class="n">std_dev</span><span class="p">,</span>
+            <span class="s2">&quot;rms&quot;</span><span class="p">:</span> <span class="n">rms</span><span class="p">,</span>
+            <span class="s2">&quot;25th_quartile&quot;</span><span class="p">:</span> <span class="n">q25</span><span class="p">,</span>
+            <span class="s2">&quot;75th_quartile&quot;</span><span class="p">:</span> <span class="n">q75</span><span class="p">,</span>
+            <span class="s2">&quot;dominant_frequency&quot;</span><span class="p">:</span> <span class="n">dominant_freq</span>
+        <span class="p">}</span>
+        <span class="n">arrays</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">ndarray</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s2">&quot;power_spectrum&quot;</span><span class="p">:</span> <span class="n">Pxx_den</span><span class="p">,</span>
+            <span class="s2">&quot;frequencies&quot;</span><span class="p">:</span> <span class="n">f</span>
+        <span class="p">}</span>
+
+        <span class="k">return</span> <span class="n">scalars</span><span class="p">,</span> <span class="n">arrays</span></div>
+
+
+<div class="viewcode-block" id="Scan.row_to_scan">
+<a class="viewcode-back" href="../../_autosummary/rfscopedb.data_model.Scan.html#rfscopedb.data_model.Scan.row_to_scan">[docs]</a>
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">row_to_scan</span><span class="p">(</span><span class="n">row</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="s1">&#39;Scan&#39;</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Take a singe database row result and generates a Scan object from it.  Expects rows as dictionaries.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            row: A dictionary result from a database cursor that contains basic information about a scan.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            A Scan object based on the database row result.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">Scan</span><span class="p">(</span><span class="n">dt</span><span class="o">=</span><span class="n">row</span><span class="p">[</span><span class="s1">&#39;scan_start_utc&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">astimezone</span><span class="p">(),</span> <span class="n">sid</span><span class="o">=</span><span class="n">row</span><span class="p">[</span><span class="s1">&#39;sid&#39;</span><span class="p">])</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="Query">
+<a class="viewcode-back" href="../../_autosummary/rfscopedb.data_model.Query.html#rfscopedb.data_model.Query">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">Query</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;This class is responsible for running queries of waveform data against the database.</span>
+
+<span class="sd">    The basic idea is that a Query will be staged, where information about the set of scans will be determined from the</span>
+<span class="sd">    database.  The user can investigate the scan information to determine if they would like to continue querying data</span>
+<span class="sd">    from the database.  Since querying large amounts of data from the database could consume large amounts of time and</span>
+<span class="sd">    system resources, the user may wish to check how many scans are included in their query before continuing.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">staged</span><span class="p">:</span> <span class="nb">bool</span>
+    <span class="n">scan_meta</span><span class="p">:</span> <span class="kc">None</span> <span class="o">|</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span>
+    <span class="n">wf_data</span><span class="p">:</span> <span class="kc">None</span> <span class="o">|</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span>
+    <span class="n">wf_meta</span><span class="p">:</span> <span class="kc">None</span> <span class="o">|</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span>
+
+<div class="viewcode-block" id="Query.__init__">
+<a class="viewcode-back" href="../../_autosummary/rfscopedb.data_model.Query.html#rfscopedb.data_model.Query.__init__">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">db</span><span class="p">:</span> <span class="n">WaveformDB</span><span class="p">,</span> <span class="n">signal_names</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="n">array_names</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+                 <span class="n">begin</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">datetime</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">end</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">datetime</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+                 <span class="n">scan_filter_params</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">scan_filter_ops</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+                 <span class="n">scan_filter_values</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">str</span><span class="p">]]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+                 <span class="n">wf_metric_names</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Construct a query object with the information needed to query scan and waveform data.</span>
+
+<span class="sd">        The three scan_filter_* parameters work in conjunction.  The must be list-like objects of the same length.  At</span>
+<span class="sd">        a given index, a filter is later constructed such that &quot;&lt;param&gt; &lt;op&gt; &lt;value&gt;&quot; is used in a SQL WHERE clause.</span>
+<span class="sd">        For example, if scan_filter_params = [&#39;R123GMES&#39;, &#39;R223GMES&#39;], scan_filter_ops = [&#39;&gt;&#39;, &#39;&lt;&#39;], and</span>
+<span class="sd">        scan_filter_values = [5, 2], then each scan included in the query must meet the following criteria:</span>
+<span class="sd">            R123GMES &gt; 5 AND R223GMES &lt; 2</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            db: A WaveFromDB object that contains an active connection to the database.</span>
+<span class="sd">            signal_names: A list of signals (a.k.a. waveforms) to query.  E.g., GMES, PMES, etc.</span>
+<span class="sd">            array_names: Each signal/waveform may have multiple arrays of data associated with it.  For example, &#39;raw&#39;</span>
+<span class="sd">                         returns the unmodified waveform data, while &#39;power_spectrum&#39; returns the power at different</span>
+<span class="sd">                         frequencies.</span>
+<span class="sd">            begin: The earliest start time for which a scan will be included in the query.  If None, there is</span>
+<span class="sd">                   no earliest time filter.</span>
+<span class="sd">            end: The latest end time for which a scan will be included in the query.  If None, there is latest time</span>
+<span class="sd">                 filter.</span>
+<span class="sd">             scan_filter_params: A list of metadata parameter names used to filter the scans for the query</span>
+<span class="sd">             scan_filter_ops: A list of SQL comparison operators used to filter the scans for the query</span>
+<span class="sd">             scan_filter_values: A list of values used to filter the scans for the query</span>
+<span class="sd">             wf_metric_names: A list of scalar metrics related to a waveform that will be included if they exist in the</span>
+<span class="sd">                              database.</span>
+<span class="sd">            &quot;&quot;&quot;</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">db</span> <span class="o">=</span> <span class="n">db</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">signal_names</span> <span class="o">=</span> <span class="n">signal_names</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">array_names</span> <span class="o">=</span> <span class="n">array_names</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">begin</span> <span class="o">=</span> <span class="n">begin</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">end</span> <span class="o">=</span> <span class="n">end</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">scan_filter_params</span> <span class="o">=</span> <span class="n">scan_filter_params</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">scan_filter_ops</span> <span class="o">=</span> <span class="n">scan_filter_ops</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">scan_filter_values</span> <span class="o">=</span> <span class="n">scan_filter_values</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">wf_metric_names</span> <span class="o">=</span> <span class="n">wf_metric_names</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">staged</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">scan_meta</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">wf_data</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">wf_meta</span> <span class="o">=</span> <span class="kc">None</span></div>
+
+
+<div class="viewcode-block" id="Query.stage">
+<a class="viewcode-back" href="../../_autosummary/rfscopedb.data_model.Query.html#rfscopedb.data_model.Query.stage">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">stage</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Perform the initial query to determine which scans meet the requested criteria.&quot;&quot;&quot;</span>
+
+        <span class="n">scan_rows</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="o">.</span><span class="n">query_scan_rows</span><span class="p">(</span><span class="n">begin</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">begin</span><span class="p">,</span> <span class="n">end</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">end</span><span class="p">,</span> <span class="n">filter_params</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">scan_filter_params</span><span class="p">,</span>
+                                            <span class="n">filter_ops</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">scan_filter_ops</span><span class="p">,</span> <span class="n">filter_values</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">scan_filter_values</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">scan_meta</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">scan_rows</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">staged</span> <span class="o">=</span> <span class="kc">True</span></div>
+
+
+<div class="viewcode-block" id="Query.get_scan_count">
+<a class="viewcode-back" href="../../_autosummary/rfscopedb.data_model.Query.html#rfscopedb.data_model.Query.get_scan_count">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_scan_count</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Get the number of scans that meet the requested criteria.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">scan_meta</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Query.run">
+<a class="viewcode-back" href="../../_autosummary/rfscopedb.data_model.Query.html#rfscopedb.data_model.Query.run">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Run the full query that will return the full waveform data and metadata.  Must run stage() first.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">staged</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Query not staged.&quot;</span><span class="p">)</span>
+
+        <span class="c1"># Note that in the database, array names are specified by the &quot;process&quot; that generated them.</span>
+        <span class="n">rows</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="o">.</span><span class="n">query_waveform_data</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">scan_meta</span><span class="o">.</span><span class="n">sid</span><span class="o">.</span><span class="n">values</span><span class="o">.</span><span class="n">tolist</span><span class="p">(),</span> <span class="n">signal_names</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">signal_names</span><span class="p">,</span>
+                             <span class="n">process_names</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">array_names</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">wf_data</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">rows</span><span class="p">)</span>
+
+        <span class="n">rows</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="o">.</span><span class="n">query_waveform_metadata</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">scan_meta</span><span class="o">.</span><span class="n">sid</span><span class="o">.</span><span class="n">values</span><span class="o">.</span><span class="n">tolist</span><span class="p">(),</span> <span class="n">signal_names</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">signal_names</span><span class="p">,</span>
+                                     <span class="n">metric_names</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">wf_metric_names</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">wf_meta</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">rows</span><span class="p">)</span></div>
+</div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2025, Adam Carpenter.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

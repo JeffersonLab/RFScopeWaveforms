@@ -1,0 +1,37 @@
+rfscopedb.data\_model.Query
+===========================
+
+.. currentmodule:: rfscopedb.data_model
+
+.. autoclass:: Query
+   :members:
+   :show-inheritance:
+   :inherited-members:
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~Query.__init__
+      ~Query.get_scan_count
+      ~Query.run
+      ~Query.stage
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~Query.staged
+      ~Query.scan_meta
+      ~Query.wf_data
+      ~Query.wf_meta
+   
+   
