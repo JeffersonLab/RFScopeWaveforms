@@ -5,14 +5,38 @@ from datetime import datetime
 import numpy as np
 
 import sys
-print(sys.path)
 
-
+from rfscopedb.db import QueryFilter
 from rfscopedb.data_model import Scan
 
 
 class TestDB(unittest.TestCase):
     dt = datetime.strptime("2020-01-01 01:23:45.123456", '%Y-%m-%d %H:%M:%S.%f')
+
+    def test_query_filter_creation1(self):
+        f = QueryFilter(None, None, None)
+
+    def test_query_filter_creation2(self):
+        f = QueryFilter(['c', ], ['='], [73])
+
+    def test_query_filter_creation3(self):
+        f = QueryFilter(filter_params=['c', 'b', 'a'], filter_ops=['=', '<=', '='], filter_values=[73, 24, "asdf"])
+
+    def test_query_filter_creation_checks(self):
+        with self.assertRaises(TypeError):
+            f = QueryFilter(['c', ])
+        with self.assertRaises(TypeError):
+            f = QueryFilter(filter_ops=['=', ])
+        with self.assertRaises(TypeError):
+            f = QueryFilter([27, ])
+        with self.assertRaises(ValueError):
+            f = QueryFilter(['c', ], ['asdf'], [73])
+        with self.assertRaises(ValueError):
+            f = QueryFilter(['c', ], ['>'], [73, 24, 'asdf'])
+
+    def test_query_len(self):
+        f = QueryFilter(filter_params=['c', 'b', 'a'], filter_ops=['=', '<=', '='], filter_values=[73, 24, "asdf"])
+        self.assertEqual(len(f), 3)
 
     def test_scan_creation(self):
         x = Scan(dt=TestDB.dt)
@@ -62,7 +86,7 @@ class TestDB(unittest.TestCase):
                     "median": np.float64(0.9999629292071286),
                     "standard_deviation": np.float64(0.3535384535785386),
                     "rms": np.float64(1.0606153659439252),
-                    "25th_quartile":np.float64(0.6464856093668832),
+                    "25th_quartile": np.float64(0.6464856093668832),
                     "75th_quartile": np.float64(1.3534360761155124),
                     "dominant_frequency": np.float64(6.103515625)
                 },
@@ -88,7 +112,7 @@ class TestDB(unittest.TestCase):
                     "median": np.float64(1.9999629292071286),
                     "standard_deviation": np.float64(0.3535384535785386),
                     "rms": np.float64(2.030965403203506),
-                    "25th_quartile":np.float64(1.6464856093668832),
+                    "25th_quartile": np.float64(1.6464856093668832),
                     "75th_quartile": np.float64(2.3534360761155124),
                     "dominant_frequency": np.float64(6.103515625)
                 },

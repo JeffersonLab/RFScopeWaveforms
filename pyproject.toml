@@ -53,6 +53,4 @@ command_line = '-m pytest'
 [tool.pylint]
 max-line-length = 120
 max-attributes = 12
-
-# ... other project metadata fields as listed in:
-#     https://packaging.python.org/en/latest/guides/writing-pyproject-toml/
+max-args = 8

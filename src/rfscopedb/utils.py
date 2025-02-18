@@ -1,4 +1,6 @@
+"""A module for commonly used utility functions throughout the package"""
 from datetime import datetime, timezone
+
 
 def get_datetime_as_utc(dt: datetime):
     """Convert a datetime to UTC timezone.  Assume it is system local system timezone if no time zone info given."""

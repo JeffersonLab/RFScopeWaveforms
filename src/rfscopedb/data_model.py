@@ -2,7 +2,7 @@
 
 import json
 from datetime import datetime
-from typing import Optional, Dict, Tuple, Any, List, Union
+from typing import Optional, Dict, Tuple, Any, List
 
 import mysql.connector
 from mysql.connector.cursor import MySQLCursor
@@ -13,7 +13,6 @@ from scipy.signal import periodogram
 
 from .db import WaveformDB, QueryFilter
 from .utils import get_datetime_as_utc
-
 
 
 class Scan:
@@ -122,12 +121,10 @@ class Scan:
             cursor.execute("SELECT LAST_INSERT_ID()")
             sid = cursor.fetchone()[0]
 
-            # pylint:
-            for cav in self.waveform_data:
-                for signal_name in self.waveform_data[cav]:
+            for cav, data in self.waveform_data.items():
+                for signal_name in data:
                     if signal_name == "Time":
                         continue
-
                     wid = self._insert_waveform(cursor, sid, cav, signal_name)
                     self._insert_waveform_adata(cursor, wid, cav, signal_name)
                     self._insert_waveform_sdata(cursor, wid, cav, signal_name)
@@ -154,7 +151,7 @@ class Scan:
     def _insert_waveform(self, cursor: MySQLCursor, sid: int, cav: str, signal_name: str) -> int:
         """Insert a waveform into the database and return it's wid key."""
         cursor.execute("INSERT INTO waveform(sid, cavity, signal_name, sample_rate_hz) VALUES (%s, %s, %s, %s)",
-            (sid, cav, signal_name, self.sampling_rate[cav]))
+                       (sid, cav, signal_name, self.sampling_rate[cav]))
         cursor.execute("SELECT LAST_INSERT_ID()")
         return cursor.fetchone()[0]
 
@@ -257,7 +254,7 @@ class Scan:
             "mean": np.mean(arr),
             "median": np.median(arr),
             "standard_deviation": np.std(arr),
-            "rms":  np.sqrt(np.mean(np.square(arr))),
+            "rms": np.sqrt(np.mean(np.square(arr))),
             "25th_quartile": np.percentile(arr, 25),
             "75th_quartile": np.percentile(arr, 75),
             "dominant_frequency": f[np.argmax(pxx_den)]
@@ -295,14 +292,10 @@ class Query:
     wf_data: None | pd.DataFrame
     wf_meta: None | pd.DataFrame
 
-    def __init__(self, db: WaveformDB, signal_names: List[str], array_names: Optional[List[str]] = None,
-                 begin: Optional[datetime] = None, end: Optional[datetime] = None,
-                 scan_filter_params: Optional[List[str]] = None, scan_filter_ops: Optional[List[str]] = None,
-                 scan_filter_values: Optional[List[Union[float, str]]] = None,
+    def __init__(self, db: WaveformDB, signal_names: List[str], *, array_names: Optional[List[str]] = None,
+                 begin: Optional[datetime] = None, end: Optional[datetime] = None, scan_filter: QueryFilter = None,
                  wf_metric_names: Optional[List[str]] = None):
         """Construct a query object with the information needed to query scan and waveform data.
-
-        The three scan_filter_* parameters are used to create a QueryFilter.  See db.QueryFilter for more details.
 
         Args:
             db: A WaveFromDB object that contains an active connection to the database.
@@ -314,9 +307,7 @@ class Query:
                    no earliest time filter.
             end: The latest end time for which a scan will be included in the query.  If None, there is latest time
                  filter.
-             scan_filter_params: A list of metadata parameter names used to filter the scans for the query
-             scan_filter_ops: A list of SQL comparison operators used to filter the scans for the query
-             scan_filter_values: A list of values used to filter the scans for the query
+             scan_filter: An object used to filter out scans based on metadata criteria.
              wf_metric_names: A list of scalar metrics related to a waveform that will be included if they exist in the
                               database.
             """
@@ -326,10 +317,7 @@ class Query:
         self.array_names = array_names
         self.begin = begin
         self.end = end
-        if scan_filter_params is not None or scan_filter_ops is not None or scan_filter_values is not None:
-            self.scan_filter = QueryFilter(scan_filter_params, scan_filter_ops, scan_filter_values)
-        else:
-            self.scan_filter = None
+        self.scan_filter = scan_filter
         self.wf_metric_names = wf_metric_names
 
         self.staged = False
@@ -351,7 +339,7 @@ class Query:
     def run(self):
         """Run the full query that will return the full waveform data and metadata.  Must run stage() first."""
         if not self.staged:
-            raise RuntimeError(f"Query not staged.")
+            raise RuntimeError("Query not staged.")
 
         # Note that in the database, array names are specified by the "process" that generated them.
         rows = self.db.query_waveform_data(self.scan_meta.sid.values.tolist(), signal_names=self.signal_names,

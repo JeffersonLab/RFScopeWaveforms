@@ -1,6 +1,11 @@
+"""This module contains classes related to performing operations on data that already exists within the database.
+
+New data that is to be written to the database should be handled by the objects containing that data.
+"""
+
 import json
 from datetime import datetime
-from typing import Dict, Tuple, List, Union, Any, Optional
+from typing import Dict, Tuple, List, Any, Optional
 
 import numpy as np
 import mysql.connector
@@ -9,6 +14,10 @@ from .utils import get_datetime_as_utc
 
 
 class QueryFilter:
+    """This class is used to construct multipart where clauses.
+
+    This is intended for use filtering scans, but it could potentially be used in other scenarios.
+    """
     valid_ops = (">", "<", "=", "!=", ">=", "<=")
 
     def __init__(self, filter_params, filter_ops, filter_values):
@@ -51,15 +60,27 @@ class QueryFilter:
                 if op not in self.valid_ops:
                     raise ValueError(f"Invalid operation {op}")
 
+    def __len__(self) -> int:
+        """Return the number of conditional clauses that will be generated."""
+        if self.params is None:
+            return 0
+        return len(self.params)
+
 
 class WaveformDB:
+    """A class that handles operations on data that already exists within the database.
 
-    def __init__(self, host, user, password, port: int = 3306, database="scope_waveforms"):
+    This class will manage the connection lifecycle.
+    """
+
+    def __init__(self, host: str, user: str, password: str, *, port: int = 3306, database="scope_waveforms"):
         self.host = host
         self.user = user
         self.port = port
         self.database = database
 
+        # Prevents error on del if creating connection fails.
+        self.conn = None
         # Will throw exception if it cannot connect
         self.conn = mysql.connector.connect(
             host=self.host,
@@ -77,7 +98,7 @@ class WaveformDB:
 
     def query_scan_rows(self, begin: datetime = None, end: datetime = None, q_filter: QueryFilter = None
                         ) -> List[Dict[str, Any]]:
-        f"""Query scan data (sans waveforms) from the database and return it in an easy to process format.
+        """Query scan data (sans waveforms) from the database and return it in an easy to process format.
         
         Note all filter_* parameters must be of the same length.
 
@@ -136,7 +157,7 @@ class WaveformDB:
             elif 'f_name' in row:
                 scan_meta[sid][f"f_{row['f_name']}"] = row['f_value']
 
-        return [val for val in scan_meta.values()]
+        return list(scan_meta.values())
 
     def query_waveform_data(self, sids: List[int], signal_names: Optional[List[str]],
                             process_names: Optional[List[str]]) -> List[Dict[str, Any]]:
@@ -250,7 +271,7 @@ class WaveformDB:
             meta[wid]['sample_rate_hz'] = row['sample_rate_hz']
             meta[wid][row['name']] = row['value']
 
-        return [val for val in meta.values()]
+        return list(meta.values())
 
     @staticmethod
     def gen_scan_join_statements(tests: List[Tuple[str, str, Any]]) -> Tuple[str, List[Any]]:
@@ -279,7 +300,7 @@ class WaveformDB:
 
     @classmethod
     def get_scan_join_clauses(cls, begin: datetime, end: datetime, q_filter: QueryFilter) -> tuple[str, List[str]]:
-        f"""Generates JOIN/WHERE clauses for efficiently filtering scans by its metadata.
+        """Generates JOIN/WHERE clauses for efficiently filtering scans by its metadata.
 
         Args:
             begin: The earliest scan start time
@@ -289,14 +310,11 @@ class WaveformDB:
         Returns:
             A string of JOIN/WHERE statements 
         """
-        # scan_tests, meta_tests = WaveformDB.get_tests(begin, end, filter_params, filter_ops, filter_values)
-        # print(scan_tests)
-
         meta_tests = []
 
         # Process the other filters on scan metadata.  Split up the string based values from the numeric values since
         # they are in different tables.
-        if q_filter is not None and q_filter.params is not None:
+        if q_filter is not None and len(q_filter) > 0:
             for item in zip(q_filter.params, q_filter.ops, q_filter.values):
                 meta_tests.append((item[0], item[1], item[2]))
 
