@@ -142,10 +142,6 @@ class Scan:
             if cursor is not None:
                 cursor.close()
 
-            # TODO: better logging
-            print(f"ERROR: {e}")
-            # TODO: Alternative to catch and throw?
-
             raise e
 
     def _insert_waveform(self, cursor: MySQLCursor, sid: int, cav: str, signal_name: str) -> int:
