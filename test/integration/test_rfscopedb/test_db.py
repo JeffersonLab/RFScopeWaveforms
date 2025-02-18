@@ -5,8 +5,7 @@ import numpy as np
 
 from rfscopedb.db import WaveformDB
 from rfscopedb.data_model import Scan
-
-from src.rfscopedb.db import QueryFilter
+from rfscopedb.db import QueryFilter
 
 
 class TestDB(unittest.TestCase):
