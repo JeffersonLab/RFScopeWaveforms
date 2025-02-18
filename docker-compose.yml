@@ -1,4 +1,4 @@
-dsservices:
+services:
   mariadb:
     hostname: mariadb
     container_name: mariadb
