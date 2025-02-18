@@ -119,6 +119,28 @@ class TestDB(unittest.TestCase):
                 }]
         self.assertListEqual(exp, out)
 
+    def test_query_scans_no_match1(self):
+        # Test that date filters + multiple metadata filters work even when the same name exists in both the float
+        # and string metadata tables ("c").
+
+        # Give a limited date range so no matches are returned
+        out = TestDB.db.query_scan_rows(begin=datetime.strptime("2019-06-01", "%Y-%m-%d"),
+                                        end=datetime.strptime("2019-06-02", "%Y-%m-%d"))
+        exp = []
+        self.assertListEqual(exp, out)
+
+    def test_query_scans_no_match2(self):
+        # Test that date filters + multiple metadata filters work even when the same name exists in both the float
+        # and string metadata tables ("c").
+
+        # Give a limited date range so no matches are returned
+        out = TestDB.db.query_scan_rows(begin=datetime.strptime("2019-06-01", "%Y-%m-%d"),
+                                        end=datetime.strptime("2019-06-02", "%Y-%m-%d"),
+                                        q_filter=QueryFilter(["a", "b", "c", "c"], ["<", "<", "=", "="],
+                                                             [2, 3, 100, "on"]))
+        exp = []
+        self.assertListEqual(exp, out)
+
     def test_insert_delete(self):
         # Pick dates that don't overlap.  On the off chance the test fail to delete these, they shouldn't pollute the
         # other tests.
