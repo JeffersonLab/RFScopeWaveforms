@@ -7,3 +7,8 @@ services:
      - "3306:3306"
     environment:
       MARIADB_ROOT_PASSWORD: password
+    healthcheck:
+      test: ["CMD", "echo", "'use scope_waveforms'", "|", "mysql", "-u", "scope_rw", "-ppassword"]
+      interval: 10s
+      timeout: 5s
+      retries: 6
