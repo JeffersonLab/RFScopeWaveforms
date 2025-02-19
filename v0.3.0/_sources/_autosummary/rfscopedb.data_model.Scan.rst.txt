@@ -1,0 +1,30 @@
+rfscopedb.data\_model.Scan
+==========================
+
+.. currentmodule:: rfscopedb.data_model
+
+.. autoclass:: Scan
+   :members:
+   :show-inheritance:
+   :inherited-members:
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~Scan.__init__
+      ~Scan.add_cavity_data
+      ~Scan.add_scan_data
+      ~Scan.analyze_signal
+      ~Scan.insert_data
+      ~Scan.row_to_scan
+   
+   
+
+   
+   
+   
