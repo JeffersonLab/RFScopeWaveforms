@@ -26,8 +26,8 @@ dynamic = ["version"]
 
 [project.optional-dependencies]
 dev = [
-    'coverage >= 7.6, < 8.0',
     'pytest >= 8.3, < 9.0',
+    'pytest-cov >= 6.0.0, < 7.0',
     'build >= 1.2, < 2.0',
     'Sphinx >= 8.1, < 9.0',
     'sphinx-autodoc-typehints >= 3.0, < 4.0',
@@ -45,11 +45,7 @@ version = { file = "VERSION" }
 pythonpath = ["src"]
 testpaths = ["test/unit", "test/integration"]
 norecursedirs = [".git", "node_modules", "venv"]
-
-[tool.coverage.run]
-branch = true
-include = ['src/*']
-command_line = '-m pytest'
+addopts = "--cov=rfscopedb --cov-fail-under=80"
 
 [tool.pylint]
 max-line-length = 120
