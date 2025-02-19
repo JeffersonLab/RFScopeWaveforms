@@ -243,6 +243,7 @@ class Scan:
         # power spectrum analysis using Welch's method
         f, pxx_den = periodogram(arr, sampling_rate)
 
+        # noinspection PyUnresolvedReferences
         scalars = {
             "minimum": min_val,
             "maximum": max_val,

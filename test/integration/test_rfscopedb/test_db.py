@@ -1,3 +1,4 @@
+"""Integration tests for the db module"""
 import unittest
 from datetime import datetime
 
@@ -8,7 +9,8 @@ from rfscopedb.data_model import Scan
 from rfscopedb.db import QueryFilter
 
 
-class TestDB(unittest.TestCase):
+class TestWaveformDB(unittest.TestCase):
+    """Integration tests for the WaveformDB class"""
     db = WaveformDB(host='localhost', user='scope_rw', password='password')
 
     # def test_0scan_insert_query(self):
@@ -50,7 +52,8 @@ class TestDB(unittest.TestCase):
     #     x3.insert_data(TestDB.db.conn)
 
     def test_query_scans1(self):
-        out = TestDB.db.query_scan_rows()
+        """Test querying all scans"""
+        out = TestWaveformDB.db.query_scan_rows()
         exp = [{'sid': 1,
                 'scan_start_utc': datetime(2020, 1, 1, 6, 23, 45, 123456),
                 's_c': 'on', 'f_a': 1.0, 'f_b': 2.0, 'f_c': 100.0},
@@ -64,8 +67,9 @@ class TestDB(unittest.TestCase):
         self.assertListEqual(exp, out)
 
     def test_query_scans2(self):
-        out = TestDB.db.query_scan_rows(begin=datetime.strptime("2020-06-01", "%Y-%m-%d"),
-                                        end=datetime.strptime("2021-06-01", "%Y-%m-%d"))
+        """Test querying a scan using only the begin/end tags"""
+        out = TestWaveformDB.db.query_scan_rows(begin=datetime.strptime("2020-06-01", "%Y-%m-%d"),
+                                                end=datetime.strptime("2021-06-01", "%Y-%m-%d"))
         exp = [{'sid': 2,
                 'scan_start_utc': datetime(2021, 1, 1, 6, 23, 45, 123456),
                 's_c': 'off',
@@ -76,10 +80,11 @@ class TestDB(unittest.TestCase):
         self.assertListEqual(exp, out)
 
     def test_query_scans3(self):
+        """Test querying a scan using the begin/end tags and a single query filter"""
         # Test that date filters + single metadata filter work
-        out = TestDB.db.query_scan_rows(begin=datetime.strptime("2020-06-01", "%Y-%m-%d"),
-                                        end=datetime.strptime("2022-06-01", "%Y-%m-%d"),
-                                        q_filter=QueryFilter(["c", ], ["=", ], ["off", ]))
+        out = TestWaveformDB.db.query_scan_rows(begin=datetime.strptime("2020-06-01", "%Y-%m-%d"),
+                                                end=datetime.strptime("2022-06-01", "%Y-%m-%d"),
+                                                q_filter=QueryFilter(["c", ], ["=", ], ["off", ]))
         exp = [{'sid': 2,
                 'scan_start_utc': datetime(2021, 1, 1, 6, 23, 45, 123456),
                 's_c': 'off',
@@ -91,10 +96,11 @@ class TestDB(unittest.TestCase):
         self.assertListEqual(exp, out)
 
     def test_query_scans4(self):
+        """Test querying a scan using the begin/end tags and multiple query filters"""
         # Test that date filters + multiple metadata filters work
-        out = TestDB.db.query_scan_rows(begin=datetime.strptime("2019-06-01", "%Y-%m-%d"),
-                                        end=datetime.strptime("2023-06-01", "%Y-%m-%d"),
-                                        q_filter=QueryFilter(["a", "b", "c"], ["<", "<", "="], [2, 3, "on"]))
+        out = TestWaveformDB.db.query_scan_rows(begin=datetime.strptime("2019-06-01", "%Y-%m-%d"),
+                                                end=datetime.strptime("2023-06-01", "%Y-%m-%d"),
+                                                q_filter=QueryFilter(["a", "b", "c"], ["<", "<", "="], [2, 3, "on"]))
         exp = [{'sid': 1,
                 'scan_start_utc': datetime(2020, 1, 1, 6, 23, 45, 123456),
                 's_c': 'on', 'f_a': 1.0, 'f_b': 2.0, 'f_c': 100.0},
@@ -105,13 +111,12 @@ class TestDB(unittest.TestCase):
         self.assertListEqual(exp, out)
 
     def test_query_scans5(self):
-        # Test that date filters + multiple metadata filters work even when the same name exists in both the float
-        # and string metadata tables ("c").
+        """Test that date filters + multiple metadata filters work with name in both the float and string tables."""
 
-        out = TestDB.db.query_scan_rows(begin=datetime.strptime("2019-06-01", "%Y-%m-%d"),
-                                        end=datetime.strptime("2023-06-01", "%Y-%m-%d"),
-                                        q_filter=QueryFilter(["a", "b", "c", "c"], ["<", "<", "=", "="],
-                                                             [2, 3, 100, "on"]))
+        out = TestWaveformDB.db.query_scan_rows(begin=datetime.strptime("2019-06-01", "%Y-%m-%d"),
+                                                end=datetime.strptime("2023-06-01", "%Y-%m-%d"),
+                                                q_filter=QueryFilter(["a", "b", "c", "c"], ["<", "<", "=", "="],
+                                                                     [2, 3, 100, "on"]))
         exp = [{'sid': 1,
                 'scan_start_utc': datetime(2020, 1, 1, 6, 23, 45, 123456),
                 's_c': 'on', 'f_a': 1.0, 'f_b': 2.0, 'f_c': 100.0
@@ -119,28 +124,27 @@ class TestDB(unittest.TestCase):
         self.assertListEqual(exp, out)
 
     def test_query_scans_no_match1(self):
-        # Test that date filters + multiple metadata filters work even when the same name exists in both the float
-        # and string metadata tables ("c").
+        """Test behavior when no matches are found"""
 
         # Give a limited date range so no matches are returned
-        out = TestDB.db.query_scan_rows(begin=datetime.strptime("2019-06-01", "%Y-%m-%d"),
-                                        end=datetime.strptime("2019-06-02", "%Y-%m-%d"))
+        out = TestWaveformDB.db.query_scan_rows(begin=datetime.strptime("2019-06-01", "%Y-%m-%d"),
+                                                end=datetime.strptime("2019-06-02", "%Y-%m-%d"))
         exp = []
         self.assertListEqual(exp, out)
 
     def test_query_scans_no_match2(self):
-        # Test that date filters + multiple metadata filters work even when the same name exists in both the float
-        # and string metadata tables ("c").
+        """Test that date filters + multiple metadata filters with duplicate names works when no matches are found."""
 
         # Give a limited date range so no matches are returned
-        out = TestDB.db.query_scan_rows(begin=datetime.strptime("2019-06-01", "%Y-%m-%d"),
-                                        end=datetime.strptime("2019-06-02", "%Y-%m-%d"),
-                                        q_filter=QueryFilter(["a", "b", "c", "c"], ["<", "<", "=", "="],
-                                                             [2, 3, 100, "on"]))
+        out = TestWaveformDB.db.query_scan_rows(begin=datetime.strptime("2019-06-01", "%Y-%m-%d"),
+                                                end=datetime.strptime("2019-06-02", "%Y-%m-%d"),
+                                                q_filter=QueryFilter(["a", "b", "c", "c"], ["<", "<", "=", "="],
+                                                                     [2, 3, 100, "on"]))
         exp = []
         self.assertListEqual(exp, out)
 
     def test_insert_delete(self):
+        """Test inserting and deleting scan data."""
         # Pick dates that don't overlap.  On the off chance the test fail to delete these, they shouldn't pollute the
         # other tests.
         dt1 = datetime.strptime("2000-01-01 01:23:45.123456", '%Y-%m-%d %H:%M:%S.%f')
@@ -171,10 +175,10 @@ class TestDB(unittest.TestCase):
         x2.add_cavity_data("c2", data=cavity_data2, sampling_rate=5000)
         x2.add_scan_data(float_data={'a': 2.0, "b": 3.0, "d": -10.0}, str_data={'c': 'off'})
 
-        x1.insert_data(TestDB.db.conn)
-        x2.insert_data(TestDB.db.conn)
+        x1.insert_data(TestWaveformDB.db.conn)
+        x2.insert_data(TestWaveformDB.db.conn)
 
-        scans = TestDB.db.query_scan_rows(begin=dt1, end=dt2)
+        scans = TestWaveformDB.db.query_scan_rows(begin=dt1, end=dt2)
         sids = [scan['sid'] for scan in scans]
         print("sids", sids)
 
@@ -187,13 +191,17 @@ class TestDB(unittest.TestCase):
         sids = [row['sid'] for row in db.query_scan_rows(begin=dt1, end=dt2)]
         self.assertEqual(0, len(sids))
         # The long running TestDB.db.conn object doesn't see these updates unless it is reset.
-        TestDB.db.conn.cmd_reset_connection()
+        TestWaveformDB.db.conn.cmd_reset_connection()
 
+    # pylint: disable=no-value-for-parameter
+    # noinspection PyArgumentList
     def test_query_waveform_data1(self):
+        """Test expected failure mode for query_waveform data."""
         with self.assertRaises(TypeError):
-            TestDB.db.query_waveform_data()
+            TestWaveformDB.db.query_waveform_data()
 
     def test_query_waveform_data2(self):
+        """Test querying waveform data, single scan, all signals, all arrays"""
         exp = [
             {'wid': 1, 'sid': 1, 'cavity': 'c1', 'signal_name': 'GMES', 'sample_rate_hz': 5000.0, 'comment': None,
              'wadid': 1, 'process': 'raw', 'data': None},
@@ -203,16 +211,18 @@ class TestDB(unittest.TestCase):
              'wadid': 3, 'process': 'frequencies', 'data': None}
         ]
 
-        result = TestDB.db.query_waveform_data(sids=[1, ], signal_names=None, process_names=None)
+        result = TestWaveformDB.db.query_waveform_data(sids=[1, ], signal_names=None, process_names=None)
 
         # Let's not check the data since it's a lot of entries.
-        for i in range(len(result)):
-            result[i]['data'] = None
+        for waveform in result:
+            waveform['data'] = None
 
+        # pylint: disable=consider-using-enumerate
         for i in range(len(exp)):
             self.assertDictEqual(exp[i], result[i])
 
     def test_query_waveform_data3(self):
+        """Test querying waveform data, single scan, single signal, all arrays"""
         exp = [
             {'wid': 1, 'sid': 1, 'cavity': 'c1', 'signal_name': 'GMES', 'sample_rate_hz': 5000.0, 'comment': None,
              'wadid': 1, 'process': 'raw', 'data': None},
@@ -221,16 +231,18 @@ class TestDB(unittest.TestCase):
             {'wid': 1, 'sid': 1, 'cavity': 'c1', 'signal_name': 'GMES', 'sample_rate_hz': 5000.0, 'comment': None,
              'wadid': 3, 'process': 'frequencies', 'data': None}
         ]
-        result = TestDB.db.query_waveform_data(sids=[1, ], signal_names=['GMES', ], process_names=None)
+        result = TestWaveformDB.db.query_waveform_data(sids=[1, ], signal_names=['GMES', ], process_names=None)
 
         # Let's not check the data since it's a lot of entries.
-        for i in range(len(result)):
-            result[i]['data'] = None
+        for waveform in result:
+            waveform['data'] = None
 
+        # pylint: disable=consider-using-enumerate
         for i in range(len(exp)):
             self.assertDictEqual(exp[i], result[i])
 
     def test_query_waveform_data4(self):
+        """Test querying waveform data, single scan, single signals, single array"""
         # Test the case where we specify each parameter and verify the data matches
         t = np.linspace(0, 1638.2, 8192) / 1000.0
         g = 0.5 * np.cos(t * 2 * np.pi * 6.103) + 1
@@ -238,7 +250,7 @@ class TestDB(unittest.TestCase):
             {'wid': 1, 'sid': 1, 'cavity': 'c1', 'signal_name': 'GMES', 'sample_rate_hz': 5000.0, 'comment': None,
              'wadid': 1, 'process': 'raw', 'data': g}
         ]
-        result = TestDB.db.query_waveform_data(sids=[1, ], signal_names=['GMES', ], process_names=['raw', ])
+        result = TestWaveformDB.db.query_waveform_data(sids=[1, ], signal_names=['GMES', ], process_names=['raw', ])
 
         self.assertTrue(np.allclose(exp[0]['data'], result[0]['data']))
         exp[0]['data'] = None
@@ -247,6 +259,7 @@ class TestDB(unittest.TestCase):
         self.assertDictEqual(exp[0], result[0])
 
     def test_query_waveform_data5(self):
+        """Test querying waveform data. multiple scans, multiple signals, multiple arrays"""
         # Test the case where we specify each parameter and verify the data matches
         exp = [
             {'wid': 1, 'sid': 1, 'cavity': 'c1', 'signal_name': 'GMES', 'sample_rate_hz': 5000.0, 'comment': None,
@@ -266,12 +279,13 @@ class TestDB(unittest.TestCase):
             {'wid': 4, 'sid': 3, 'cavity': 'c3', 'signal_name': 'PMES', 'sample_rate_hz': 5000.0, 'comment': None,
              'wadid': 11, 'process': 'power_spectrum', 'data': None}
         ]
-        result = TestDB.db.query_waveform_data(sids=[1, 2, 3], signal_names=['GMES', 'PMES'],
-                                               process_names=['raw', 'power_spectrum'])
+        result = TestWaveformDB.db.query_waveform_data(sids=[1, 2, 3], signal_names=['GMES', 'PMES'],
+                                                       process_names=['raw', 'power_spectrum'])
 
         # Let's not check the data since it's a lot of entries.
-        for i in range(len(result)):
-            result[i]['data'] = None
+        for waveform in result:
+            waveform['data'] = None
 
+        # pylint: disable=consider-using-enumerate
         for i in range(len(exp)):
             self.assertDictEqual(exp[i], result[i])

@@ -7,7 +7,8 @@
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
 
 project = 'rfscopedb'
-copyright = '2025, Adam Carpenter'
+# noinspection PyShadowingBuiltins
+copyright = '2025, Jefferson Lab'
 author = 'Adam Carpenter'
 
 # -- General configuration ---------------------------------------------------
@@ -19,7 +20,6 @@ extensions = [
     'sphinx_autodoc_typehints',
     'sphinx.ext.autosummary',
     'sphinx.ext.viewcode',
-    #'sphinx.ext.githubpages',
     'sphinx_rtd_theme',
 ]
 

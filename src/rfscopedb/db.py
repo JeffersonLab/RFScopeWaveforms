@@ -96,6 +96,7 @@ class WaveformDB:
         if self.conn is not None:
             self.conn.close()
 
+    # noinspection PyTypeChecker
     def query_scan_rows(self, begin: datetime = None, end: datetime = None, q_filter: QueryFilter = None
                         ) -> List[Dict[str, Any]]:
         """Query scan data (sans waveforms) from the database and return it in an easy to process format.
@@ -159,6 +160,7 @@ class WaveformDB:
 
         return list(scan_meta.values())
 
+    # noinspection PyTypeChecker
     def query_waveform_data(self, sids: List[int], signal_names: Optional[List[str]],
                             process_names: Optional[List[str]]) -> List[Dict[str, Any]]:
         """Queries the waveform array data for a given set of sids, signal_names, and process_names.
@@ -212,6 +214,7 @@ class WaveformDB:
 
         return rows
 
+    # noinspection PyTypeChecker
     def query_waveform_metadata(self, sids: List[int], signal_names: List[str],
                                 metric_names: List[str]) -> List[Dict[str, Any]]:
         """Queries the waveform scalar metadata for a given set of sids, signal_names, and metric names.

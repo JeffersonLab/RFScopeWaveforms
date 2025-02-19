@@ -75,4 +75,4 @@ sphinx-build -b html docsrc/source build/docs
 ```
 
 If releasing a new version, copy docsrc/build/docs to a version named directory in the gh-pages branch.  Commit and push
-updates to gh-pages branch to update the official documentation on github.io. 
+updates to gh-pages branch to update the official documentation on GitHub Pages. 

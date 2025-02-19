@@ -1,47 +1,69 @@
-import os
+"""Tests for the db.py module."""
 import unittest
 from datetime import datetime
 
 import numpy as np
 
-import sys
-
 from rfscopedb.db import QueryFilter
 from rfscopedb.data_model import Scan
 
+dt = datetime.strptime("2020-01-01 01:23:45.123456", '%Y-%m-%d %H:%M:%S.%f')
 
-class TestDB(unittest.TestCase):
-    dt = datetime.strptime("2020-01-01 01:23:45.123456", '%Y-%m-%d %H:%M:%S.%f')
+
+class TestQueryFilter(unittest.TestCase):
+    """Tests for the QueryFilter class."""
 
     def test_query_filter_creation1(self):
-        f = QueryFilter(None, None, None)
+        """Test construction with all None inputs"""
+        QueryFilter(None, None, None)
 
     def test_query_filter_creation2(self):
-        f = QueryFilter(['c', ], ['='], [73])
+        """Test construction with length one input for each inputs"""
+        QueryFilter(['c'], ['='], [73])
 
     def test_query_filter_creation3(self):
-        f = QueryFilter(filter_params=['c', 'b', 'a'], filter_ops=['=', '<=', '='], filter_values=[73, 24, "asdf"])
+        """Test construction with inputs of length greater than one"""
+        QueryFilter(filter_params=['c', 'b', 'a'], filter_ops=['=', '<=', '='], filter_values=[73, 24, "asdf"])
 
+    # pylint: disable=no-value-for-parameter
+    # noinspection PyArgumentList
     def test_query_filter_creation_checks(self):
+        """Test that construction fails for a set of expected conditions"""
         with self.assertRaises(TypeError):
-            f = QueryFilter(['c', ])
+            QueryFilter(['c', ])
         with self.assertRaises(TypeError):
-            f = QueryFilter(filter_ops=['=', ])
+            QueryFilter(filter_ops=['=', ])
         with self.assertRaises(TypeError):
-            f = QueryFilter([27, ])
+            QueryFilter([27, ])
         with self.assertRaises(ValueError):
-            f = QueryFilter(['c', ], ['asdf'], [73])
+            QueryFilter(['c', ], ['asdf'], [73])
         with self.assertRaises(ValueError):
-            f = QueryFilter(['c', ], ['>'], [73, 24, 'asdf'])
+            QueryFilter(['c', ], ['>'], [73, 24, 'asdf'])
 
-    def test_query_len(self):
+    def test_query_len1(self):
+        """Test that the len method works as expected"""
         f = QueryFilter(filter_params=['c', 'b', 'a'], filter_ops=['=', '<=', '='], filter_values=[73, 24, "asdf"])
-        self.assertEqual(len(f), 3)
+        self.assertEqual(3, len(f))
+
+    def test_query_len2(self):
+        """Test that the len method works as expected"""
+        f = QueryFilter(filter_params=['c', 'a'], filter_ops=['=', '='], filter_values=[73, "asdf"])
+        self.assertEqual(2, len(f))
+
+    def test_query_len3(self):
+        """Test that the len method works as expected"""
+        f = QueryFilter(None, None, None)
+        self.assertEqual(0, len(f))
+
+
+class TestScan(unittest.TestCase):
+    """Tests for the Scan class."""
 
     def test_scan_creation(self):
-        x = Scan(dt=TestDB.dt)
+        """Test basic construction"""
+        x = Scan(dt=dt)
 
-        self.assertEqual(TestDB.dt, x.dt)
+        self.assertEqual(dt, x.dt)
         self.assertEqual({}, x.waveform_data)
         self.assertEqual({}, x.analysis_array)
         self.assertEqual({}, x.analysis_scalar)
@@ -49,7 +71,8 @@ class TestDB(unittest.TestCase):
         self.assertEqual({}, x.scan_data_str)
 
     def test_add_scan_data(self):
-        x = Scan(dt=TestDB.dt)
+        """Test adding scan data"""
+        x = Scan(dt=dt)
 
         float_data = {'a': 11.34, 'b': 12.34, 'c': 12}
         string_data = {'as': 'test1', 'bs': 'test2'}
@@ -59,9 +82,11 @@ class TestDB(unittest.TestCase):
         self.assertDictEqual(x.scan_data_str, string_data)
 
     def test_add_cavity_data(self):
+        """Test adding cavity data"""
+        # pylint: disable=invalid-name
         self.maxDiff = None
 
-        x = Scan(dt=TestDB.dt)
+        x = Scan(dt=dt)
         t = np.linspace(0, 1638.2, 8192) / 1000.0
         gmes = 0.5 * np.cos(t * 2 * np.pi * 6.103) + 1
 
@@ -134,7 +159,6 @@ class TestDB(unittest.TestCase):
         # There is a strong peak near 6.103 Hz, but there is still some mismatch in the represented frequencies that
         # leads to a lot of low level noise in the power spectrum across all frequencies (1e-7/1e-8)  It's easier to
         # save the exact output and load for a test, but the actual PSD spike is at the correct frequency.
-        # Pxx_den = np.loadtxt(fname="power_spectrum.csv", delimiter=",")
         Pxx_den = np.loadtxt(fname="test/unit/power_spectrum.csv", delimiter=",")
         # Frequencies are multiples of the sampling resolution which equals sampling frequency / number of samples.
         f = [i * 5000.0 / 8192.0 for i in range(4097)]
@@ -155,6 +179,7 @@ class TestDB(unittest.TestCase):
 
         self.assertDictEqual(cavity_data1, x.waveform_data["R123"])
         self.assertDictEqual(cavity_data2, x.waveform_data["R124"])
+        # pylint: disable=consider-using-dict-items
         for cavity in x.analysis_array:
             for signal in x.analysis_array[cavity].keys():
                 for k in x.analysis_array[cavity][signal].keys():

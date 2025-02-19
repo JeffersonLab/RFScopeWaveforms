@@ -1,3 +1,4 @@
+"""Integration tests for this project"""
 import sys
 import os
 
