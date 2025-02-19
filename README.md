@@ -59,20 +59,18 @@ docker compose up
 
 ### Testing
 This application supports testing using `pytest` and code coverage using `coverage`.  Configuration in `pyproject.toml`.
-Integration tests required that the provided docker container(s) are running.
+Integration tests required that the provided docker container(s) are running.  [Tests](https://github.com/JeffersonLab/rfscopedb/.github/workflows/test.yml) are automatically run on appropriate triggers.
 
-| Test Type          | Command                   |
-|--------------------|---------------------------|
-| Unit               | `pytest test/unit`        |
-| Integration        | `pytest test/integration` |
-| Unit & Integration | `pytest`                  |
-| Code Coverage      | `coverage run`            |
+| Test Type          | Command                                  |
+|--------------------|------------------------------------------|
+| Unit               | `pytest test/unit`                       |
+| Integration        | `pytest test/integration`                |
+| Unit & Integration | `pytest`                                 |
+| Code Coverage      | `coverage run`                           |
+| Linting            | `pylint src/ test/unit test/integration` |
 
 ### Documentation
-Documentation is done in Sphinx.  To build documentation, run this commands from the project root.
+Documentation is done in Sphinx and automatically built and published to GitHub Pages when triggering a new [release](https://github.com/JeffersonLab/rfscopedb/.github/workflows/release.yml).  To build documentation, run this commands from the project root.
 ```
 sphinx-build -b html docsrc/source build/docs
 ```
-
-If releasing a new version, copy docsrc/build/docs to a version named directory in the gh-pages branch.  Commit and push
-updates to gh-pages branch to update the official documentation on GitHub Pages. 
