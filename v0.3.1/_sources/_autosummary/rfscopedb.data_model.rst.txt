@@ -1,0 +1,32 @@
+rfscopedb.data\_model
+=====================
+
+.. automodule:: rfscopedb.data_model
+
+   
+   
+   
+
+   
+   
+   
+
+   
+   
+   .. rubric:: Classes
+
+   .. autosummary::
+      :toctree:
+      :template: custom-class-template.rst
+   
+      Query
+      Scan
+   
+   
+
+   
+   
+   
+
+
+
