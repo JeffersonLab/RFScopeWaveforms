@@ -18,12 +18,15 @@ class TestQuery(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
-        dt1 = datetime.strptime("2020-01-01 01:23:45.123456", '%Y-%m-%d %H:%M:%S.%f')
-        dt2 = datetime.strptime("2021-01-01 01:23:45.123456", '%Y-%m-%d %H:%M:%S.%f')
-        dt3 = datetime.strptime("2022-01-01 01:23:45.123456", '%Y-%m-%d %H:%M:%S.%f')
-        cls.x1 = Scan(dt=dt1)
-        cls.x2 = Scan(dt=dt2)
-        cls.x3 = Scan(dt=dt3)
+        scan_start1 = datetime.strptime("2020-01-01 01:23:45.123456", '%Y-%m-%d %H:%M:%S.%f')
+        scan_start2 = datetime.strptime("2021-01-01 01:23:45.123456", '%Y-%m-%d %H:%M:%S.%f')
+        scan_start3 = datetime.strptime("2022-01-01 01:23:45.123456", '%Y-%m-%d %H:%M:%S.%f')
+        scan_end1 = datetime.strptime("2020-01-01 01:23:55.123456", '%Y-%m-%d %H:%M:%S.%f')
+        scan_end2 = datetime.strptime("2021-01-01 01:23:55.123456", '%Y-%m-%d %H:%M:%S.%f')
+        scan_end3 = datetime.strptime("2022-01-01 01:23:55.123456", '%Y-%m-%d %H:%M:%S.%f')
+        cls.x1 = Scan(start=scan_start1, end=scan_end1)
+        cls.x2 = Scan(start=scan_start2, end=scan_end2)
+        cls.x3 = Scan(start=scan_start3, end=scan_end3)
 
         t = np.linspace(0, 1638.2, 8192) / 1000.0
         g1 = 0.5 * np.cos(t * 2 * np.pi * 6.103) + 1
@@ -64,8 +67,8 @@ class TestQuery(unittest.TestCase):
         arrays = query.wf_data
 
         # Define some convenient DataFrame filters
-        is_raw = arrays.process == "raw"
-        is_psd = arrays.process == "power_spectrum"
+        is_raw = arrays.name == "raw"
+        is_psd = arrays.name == "power_spectrum"
         is_c1 = arrays.cavity == "c1"
         is_c2 = arrays.cavity == "c2"
         is_c3 = arrays.cavity == "c3"
