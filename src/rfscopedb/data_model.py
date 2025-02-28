@@ -22,17 +22,19 @@ class Scan:
     additional data related to system state at the time of the scan.
     """
 
-    def __init__(self, dt: datetime, sid: Optional[int] = None):
+    def __init__(self, start: datetime, end: datetime, sid: Optional[int] = None):
         """Construct an instance and initialize data attributes
 
         Args:
-            dt: The date and time the scan was started
+            start: The date and time the scan was started
+            end: The date and time the scan ended
             sid: The unique database scan ID for this object.  None implies that the object was not read from the
                  database.
         """
 
         self.id = sid
-        self.dt = dt
+        self.start = start
+        self.end = end
 
         # self.waveform_data will be structured as {
         #   {
@@ -110,14 +112,16 @@ class Scan:
         Args:
             conn: Connection to the database
         """
-        scan_time = get_datetime_as_utc(self.dt)
+        fmt = '%Y-%m-%d %H:%M:%S.%f'
+        start_time = get_datetime_as_utc(self.start)
+        end_time = get_datetime_as_utc(self.end)
         cursor = None
         try:
             # Transaction started by default since autocommit is off.
             cursor = conn.cursor()
             # Note: execute and executemany do sanitation and prepared statements internally.
-            cursor.execute("INSERT INTO scan (scan_start_utc)  VALUES (%s)",
-                           (scan_time.strftime('%Y-%m-%d %H:%M:%S.%f'),))
+            cursor.execute("INSERT INTO scan (scan_start_utc, scan_end_utc)  VALUES (%s, %s)",
+                           (start_time.strftime(fmt), end_time.strftime(fmt)))
             cursor.execute("SELECT LAST_INSERT_ID()")
             sid = cursor.fetchone()[0]
 
@@ -166,7 +170,7 @@ class Scan:
             array_data.append(
                 (wid, arr_name, json.dumps(self.analysis_array[cav][signal_name][arr_name].tolist())))
 
-        cursor.executemany("INSERT INTO waveform_adata (wid, process, data) VALUES (%s, %s, %s)",
+        cursor.executemany("INSERT INTO waveform_adata (wid, name, data) VALUES (%s, %s, %s)",
                            array_data)
 
     def _insert_waveform_sdata(self, cursor: MySQLCursor, wid: int, cav: str, signal_name: str):
@@ -273,7 +277,7 @@ class Scan:
         Returns:
             A Scan object based on the database row result.
         """
-        return Scan(dt=row['scan_start_utc'].astimezone(), sid=row['sid'])
+        return Scan(start=row['scan_start_utc'].astimezone(), end=row['scan_end_utc'], sid=row['sid'])
 
 
 class Query:
@@ -340,7 +344,7 @@ class Query:
 
         # Note that in the database, array names are specified by the "process" that generated them.
         rows = self.db.query_waveform_data(self.scan_meta.sid.values.tolist(), signal_names=self.signal_names,
-                                           process_names=self.array_names)
+                                           array_names=self.array_names)
         self.wf_data = pd.DataFrame(rows)
 
         rows = self.db.query_waveform_metadata(self.scan_meta.sid.values.tolist(), signal_names=self.signal_names,

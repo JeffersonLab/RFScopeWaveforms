@@ -162,8 +162,8 @@ class WaveformDB:
 
     # noinspection PyTypeChecker
     def query_waveform_data(self, sids: List[int], signal_names: Optional[List[str]],
-                            process_names: Optional[List[str]]) -> List[Dict[str, Any]]:
-        """Queries the waveform array data for a given set of sids, signal_names, and process_names.
+                            array_names: Optional[List[str]]) -> List[Dict[str, Any]]:
+        """Queries the waveform array data for a given set of sids, signal_names, and array_names.
 
         Results are stored internal to this object.
 
@@ -171,11 +171,11 @@ class WaveformDB:
             sids: A list of scan database identifiers to query waveform data
             signal_names: A list of the signal names to include data from  (GMES, PMES, etc.).  If None, all signals are
                           queried.
-            process_names: A list of the process names to include data from (names of array transforms, e.g. raw
+            array_names: A list of the array names to include data from (names of array transforms, e.g. raw
                            or power_spectrum). If None, all array types are queried.
 
         Returns:
-            A list of dictionaries each containing the data for a single array of raw or process data from a waveform.
+            A list of dictionaries each containing the data for a single array of raw or processed data from a waveform.
         """
         if sids is None or len(sids) == 0:
             raise ValueError("Must specify at least one sid")
@@ -193,10 +193,10 @@ class WaveformDB:
             signal_params = ", ".join(["%s" for _ in range(len(signal_names))])
             sql += f"AND waveform.signal_name IN ({signal_params})\n"
 
-        if process_names is not None and len(process_names) > 0:
-            data += process_names
-            process_params = ", ".join(["%s" for _ in range(len(process_names))])
-            sql += f"AND waveform_adata.process IN ({process_params})\n"
+        if array_names is not None and len(array_names) > 0:
+            data += array_names
+            array_name_params = ", ".join(["%s" for _ in range(len(array_names))])
+            sql += f"AND waveform_adata.name IN ({array_name_params})\n"
 
         cursor = None
         try:
