@@ -354,6 +354,9 @@ class Query:
     def get_frequency_range(fs: float, n_samples: int):
         """Construct the frequency distribution of a periodogram or FFT given parameters of the initial signal.
 
+        This distribution includes the nyquist frequency so is of length n_samples/2 + 1 to match scipy's periodogram
+        method.
+
         Args:
             fs: The sampling frequency in Hertz
             n_samples: The number of samples in the original signal
