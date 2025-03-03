@@ -1,6 +1,6 @@
 """Integration tests for the db module"""
 import unittest
-from datetime import datetime, timedelta
+from datetime import datetime
 
 import numpy as np
 
