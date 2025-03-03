@@ -1,0 +1,32 @@
+rfscopedb.db
+============
+
+.. automodule:: rfscopedb.db
+
+   
+   
+   
+
+   
+   
+   
+
+   
+   
+   .. rubric:: Classes
+
+   .. autosummary::
+      :toctree:
+      :template: custom-class-template.rst
+   
+      QueryFilter
+      WaveformDB
+   
+   
+
+   
+   
+   
+
+
+
