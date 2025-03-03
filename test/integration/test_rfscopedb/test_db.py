@@ -155,21 +155,16 @@ class TestWaveformDB(unittest.TestCase):
         x2 = Scan(start=scan_start2, end=scan_end2)
 
         t = np.linspace(0, 1638.2, 8192) / 1000.0
-        g1 = 0.5 * np.cos(t * 2 * np.pi * 6.103) + 1
-        g2 = 0.5 * np.cos(t * 2 * np.pi * 12.206) + 1
-
-        p1 = np.cos(t * 2 * np.pi * 100.0) + np.cos(t * 2 * np.pi * 10.0)
-        p2 = np.cos(t * 2 * np.pi * 300.0) + np.cos(t * 2 * np.pi * 20.0)
 
         cavity_data1 = {
             'Time': t,
-            'GMES': g1,
-            'PMES': p1,
+            'GMES': 0.5 * np.cos(t * 2 * np.pi * 6.103) + 1,
+            'PMES': np.cos(t * 2 * np.pi * 100.0) + np.cos(t * 2 * np.pi * 10.0),
         }
         cavity_data2 = {
             'Time': t,
-            'GMES': g2,
-            'PMES': p2,
+            'GMES': 0.5 * np.cos(t * 2 * np.pi * 12.206) + 1,
+            'PMES': np.cos(t * 2 * np.pi * 300.0) + np.cos(t * 2 * np.pi * 20.0),
         }
 
         x1.add_cavity_data("c1", data=cavity_data1, sampling_rate=5000)
@@ -182,9 +177,6 @@ class TestWaveformDB(unittest.TestCase):
 
         scans = TestWaveformDB.db.query_scan_rows(begin=scan_start1, end=scan_start2)
         sids = [scan['sid'] for scan in scans]
-        print("sids", sids)
-
-        # self.assertEqual(len(sids), 2)
 
         # User the scope_owner connection to have permissions to delete
         db = WaveformDB(host='localhost', user="scope_owner", password="password")

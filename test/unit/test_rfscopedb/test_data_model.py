@@ -1,3 +1,4 @@
+"""Test basic functions of classes in data_model that don't rely on external services."""
 from unittest import TestCase
 
 import numpy as np
@@ -8,6 +9,7 @@ from rfscopedb.db import WaveformDB
 
 
 class TestQuery(TestCase):
+    """Test the Query class."""
     db = WaveformDB(host='localhost', user='scope_rw', password='password')
 
     def test_get_frequencies1(self):
@@ -18,7 +20,7 @@ class TestQuery(TestCase):
         query = Query(db=TestQuery.db, signal_names=["GMES", "PMES"])
         arr = np.ones(n)
 
-        exp, Pxx_den = periodogram(arr, fs)
+        exp, _ = periodogram(arr, fs)
         result = query.get_frequency_range(fs, n)
 
         self.assertTrue(np.allclose(exp, result))
@@ -31,7 +33,7 @@ class TestQuery(TestCase):
         query = Query(db=TestQuery.db, signal_names=["GMES", "PMES"])
         arr = np.ones(n)
 
-        exp, Pxx_density = periodogram(arr, fs)
+        exp, _ = periodogram(arr, fs)
         result = query.get_frequency_range(fs, n)
 
         print()
@@ -48,7 +50,7 @@ class TestQuery(TestCase):
         query = Query(db=TestQuery.db, signal_names=["GMES", "PMES"])
         arr = np.ones(n)
 
-        exp, Pxx_density = periodogram(arr, fs)
+        exp, _ = periodogram(arr, fs)
         result = query.get_frequency_range(fs, n)
 
         print()
