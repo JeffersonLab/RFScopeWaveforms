@@ -261,8 +261,7 @@ class Scan:
             "dominant_frequency": f[np.argmax(pxx_den)]
         }
         arrays: dict[str, ndarray] = {
-            "power_spectrum": pxx_den,
-            "frequencies": f
+            "power_spectrum": pxx_den
         }
 
         return scalars, arrays
@@ -350,3 +349,16 @@ class Query:
         rows = self.db.query_waveform_metadata(self.scan_meta.sid.values.tolist(), signal_names=self.signal_names,
                                                metric_names=self.wf_metric_names)
         self.wf_meta = pd.DataFrame(rows)
+
+    @staticmethod
+    def get_frequency_range(fs: float, n_samples: int):
+        """Construct the frequency distribution of a periodogram or FFT given parameters of the initial signal.
+
+        Args:
+            fs: The sampling frequency in Hertz
+            n_samples: The number of samples in the original signal
+        """
+
+        # It is up to n_samples/2 + 1 since the frequency distribution includes zero, and scipy returns the nyquist
+        # frequency fs/2 (many libraries seem to not).
+        return np.array([i * float(fs) / n_samples for i in range(int(n_samples/2) + 1)])
