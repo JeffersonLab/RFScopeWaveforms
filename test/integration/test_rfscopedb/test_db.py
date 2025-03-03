@@ -147,27 +147,24 @@ class TestWaveformDB(unittest.TestCase):
         """Test inserting and deleting scan data."""
         # Pick dates that don't overlap.  On the off chance the test fail to delete these, they shouldn't pollute the
         # other tests.
-        dt1 = datetime.strptime("2000-01-01 01:23:45.123456", '%Y-%m-%d %H:%M:%S.%f')
-        dt2 = datetime.strptime("2001-01-01 01:23:45.123456", '%Y-%m-%d %H:%M:%S.%f')
-        x1 = Scan(dt=dt1)
-        x2 = Scan(dt=dt2)
+        scan_start1 = datetime.strptime("2000-01-01 01:23:45.123456", '%Y-%m-%d %H:%M:%S.%f')
+        scan_start2 = datetime.strptime("2001-01-01 01:23:45.123456", '%Y-%m-%d %H:%M:%S.%f')
+        scan_end1 = datetime.strptime("2000-01-01 01:23:55.123456", '%Y-%m-%d %H:%M:%S.%f')
+        scan_end2 = datetime.strptime("2001-01-01 01:23:55.123456", '%Y-%m-%d %H:%M:%S.%f')
+        x1 = Scan(start=scan_start1, end=scan_end1)
+        x2 = Scan(start=scan_start2, end=scan_end2)
 
         t = np.linspace(0, 1638.2, 8192) / 1000.0
-        g1 = 0.5 * np.cos(t * 2 * np.pi * 6.103) + 1
-        g2 = 0.5 * np.cos(t * 2 * np.pi * 12.206) + 1
-
-        p1 = np.cos(t * 2 * np.pi * 100.0) + np.cos(t * 2 * np.pi * 10.0)
-        p2 = np.cos(t * 2 * np.pi * 300.0) + np.cos(t * 2 * np.pi * 20.0)
 
         cavity_data1 = {
             'Time': t,
-            'GMES': g1,
-            'PMES': p1,
+            'GMES': 0.5 * np.cos(t * 2 * np.pi * 6.103) + 1,
+            'PMES': np.cos(t * 2 * np.pi * 100.0) + np.cos(t * 2 * np.pi * 10.0),
         }
         cavity_data2 = {
             'Time': t,
-            'GMES': g2,
-            'PMES': p2,
+            'GMES': 0.5 * np.cos(t * 2 * np.pi * 12.206) + 1,
+            'PMES': np.cos(t * 2 * np.pi * 300.0) + np.cos(t * 2 * np.pi * 20.0),
         }
 
         x1.add_cavity_data("c1", data=cavity_data1, sampling_rate=5000)
@@ -178,17 +175,14 @@ class TestWaveformDB(unittest.TestCase):
         x1.insert_data(TestWaveformDB.db.conn)
         x2.insert_data(TestWaveformDB.db.conn)
 
-        scans = TestWaveformDB.db.query_scan_rows(begin=dt1, end=dt2)
+        scans = TestWaveformDB.db.query_scan_rows(begin=scan_start1, end=scan_start2)
         sids = [scan['sid'] for scan in scans]
-        print("sids", sids)
-
-        # self.assertEqual(len(sids), 2)
 
         # User the scope_owner connection to have permissions to delete
         db = WaveformDB(host='localhost', user="scope_owner", password="password")
         db.delete_scans(sids[0])
         db.delete_scans(sids[1])
-        sids = [row['sid'] for row in db.query_scan_rows(begin=dt1, end=dt2)]
+        sids = [row['sid'] for row in db.query_scan_rows(begin=scan_start1, end=scan_start2)]
         self.assertEqual(0, len(sids))
         # The long running TestDB.db.conn object doesn't see these updates unless it is reset.
         TestWaveformDB.db.conn.cmd_reset_connection()
@@ -204,14 +198,12 @@ class TestWaveformDB(unittest.TestCase):
         """Test querying waveform data, single scan, all signals, all arrays"""
         exp = [
             {'wid': 1, 'sid': 1, 'cavity': 'c1', 'signal_name': 'GMES', 'sample_rate_hz': 5000.0, 'comment': None,
-             'wadid': 1, 'process': 'raw', 'data': None},
+             'wadid': 1, 'name': 'raw', 'data': None},
             {'wid': 1, 'sid': 1, 'cavity': 'c1', 'signal_name': 'GMES', 'sample_rate_hz': 5000.0, 'comment': None,
-             'wadid': 2, 'process': 'power_spectrum', 'data': None},
-            {'wid': 1, 'sid': 1, 'cavity': 'c1', 'signal_name': 'GMES', 'sample_rate_hz': 5000.0, 'comment': None,
-             'wadid': 3, 'process': 'frequencies', 'data': None}
+             'wadid': 2, 'name': 'power_spectrum', 'data': None},
         ]
 
-        result = TestWaveformDB.db.query_waveform_data(sids=[1, ], signal_names=None, process_names=None)
+        result = TestWaveformDB.db.query_waveform_data(sids=[1, ], signal_names=None, array_names=None)
 
         # Let's not check the data since it's a lot of entries.
         for waveform in result:
@@ -225,13 +217,11 @@ class TestWaveformDB(unittest.TestCase):
         """Test querying waveform data, single scan, single signal, all arrays"""
         exp = [
             {'wid': 1, 'sid': 1, 'cavity': 'c1', 'signal_name': 'GMES', 'sample_rate_hz': 5000.0, 'comment': None,
-             'wadid': 1, 'process': 'raw', 'data': None},
+             'wadid': 1, 'name': 'raw', 'data': None},
             {'wid': 1, 'sid': 1, 'cavity': 'c1', 'signal_name': 'GMES', 'sample_rate_hz': 5000.0, 'comment': None,
-             'wadid': 2, 'process': 'power_spectrum', 'data': None},
-            {'wid': 1, 'sid': 1, 'cavity': 'c1', 'signal_name': 'GMES', 'sample_rate_hz': 5000.0, 'comment': None,
-             'wadid': 3, 'process': 'frequencies', 'data': None}
+             'wadid': 2, 'name': 'power_spectrum', 'data': None},
         ]
-        result = TestWaveformDB.db.query_waveform_data(sids=[1, ], signal_names=['GMES', ], process_names=None)
+        result = TestWaveformDB.db.query_waveform_data(sids=[1, ], signal_names=['GMES', ], array_names=None)
 
         # Let's not check the data since it's a lot of entries.
         for waveform in result:
@@ -248,9 +238,9 @@ class TestWaveformDB(unittest.TestCase):
         g = 0.5 * np.cos(t * 2 * np.pi * 6.103) + 1
         exp = [
             {'wid': 1, 'sid': 1, 'cavity': 'c1', 'signal_name': 'GMES', 'sample_rate_hz': 5000.0, 'comment': None,
-             'wadid': 1, 'process': 'raw', 'data': g}
+             'wadid': 1, 'name': 'raw', 'data': g}
         ]
-        result = TestWaveformDB.db.query_waveform_data(sids=[1, ], signal_names=['GMES', ], process_names=['raw', ])
+        result = TestWaveformDB.db.query_waveform_data(sids=[1, ], signal_names=['GMES', ], array_names=['raw', ])
 
         self.assertTrue(np.allclose(exp[0]['data'], result[0]['data']))
         exp[0]['data'] = None
@@ -263,24 +253,24 @@ class TestWaveformDB(unittest.TestCase):
         # Test the case where we specify each parameter and verify the data matches
         exp = [
             {'wid': 1, 'sid': 1, 'cavity': 'c1', 'signal_name': 'GMES', 'sample_rate_hz': 5000.0, 'comment': None,
-             'wadid': 1, 'process': 'raw', 'data': None},
+             'wadid': 1, 'name': 'raw', 'data': None},
             {'wid': 1, 'sid': 1, 'cavity': 'c1', 'signal_name': 'GMES', 'sample_rate_hz': 5000.0, 'comment': None,
-             'wadid': 2, 'process': 'power_spectrum', 'data': None},
+             'wadid': 2, 'name': 'power_spectrum', 'data': None},
             {'wid': 2, 'sid': 2, 'cavity': 'c2', 'signal_name': 'GMES', 'sample_rate_hz': 5000.0, 'comment': None,
-             'wadid': 4, 'process': 'raw', 'data': None},
+             'wadid': 4, 'name': 'raw', 'data': None},
             {'wid': 2, 'sid': 2, 'cavity': 'c2', 'signal_name': 'GMES', 'sample_rate_hz': 5000.0, 'comment': None,
-             'wadid': 5, 'process': 'power_spectrum', 'data': None},
+             'wadid': 5, 'name': 'power_spectrum', 'data': None},
             {'wid': 3, 'sid': 3, 'cavity': 'c3', 'signal_name': 'GMES', 'sample_rate_hz': 5000.0, 'comment': None,
-             'wadid': 7, 'process': 'raw', 'data': None},
+             'wadid': 7, 'name': 'raw', 'data': None},
             {'wid': 3, 'sid': 3, 'cavity': 'c3', 'signal_name': 'GMES', 'sample_rate_hz': 5000.0, 'comment': None,
-             'wadid': 8, 'process': 'power_spectrum', 'data': None},
+             'wadid': 8, 'name': 'power_spectrum', 'data': None},
             {'wid': 4, 'sid': 3, 'cavity': 'c3', 'signal_name': 'PMES', 'sample_rate_hz': 5000.0, 'comment': None,
-             'wadid': 10, 'process': 'raw', 'data': None},
+             'wadid': 10, 'name': 'raw', 'data': None},
             {'wid': 4, 'sid': 3, 'cavity': 'c3', 'signal_name': 'PMES', 'sample_rate_hz': 5000.0, 'comment': None,
-             'wadid': 11, 'process': 'power_spectrum', 'data': None}
+             'wadid': 11, 'name': 'power_spectrum', 'data': None}
         ]
         result = TestWaveformDB.db.query_waveform_data(sids=[1, 2, 3], signal_names=['GMES', 'PMES'],
-                                                       process_names=['raw', 'power_spectrum'])
+                                                       array_names=['raw', 'power_spectrum'])
 
         # Let's not check the data since it's a lot of entries.
         for waveform in result:
@@ -289,3 +279,33 @@ class TestWaveformDB(unittest.TestCase):
         # pylint: disable=consider-using-enumerate
         for i in range(len(exp)):
             self.assertDictEqual(exp[i], result[i])
+
+    # def test_insert_lots(self):
+    #     """Test inserting a lot of scans.
+    #
+    #     This should only be run for manual review since it takes time, disk, and manual clean up (docker compose down)
+    #     """
+    #     # Pick dates that don't overlap.  On the off chance the test fail to delete these, they shouldn't pollute the
+    #     # other tests.
+    #     start = datetime.strptime("2000-01-01 01:23:45.123456", '%Y-%m-%d %H:%M:%S.%f')
+    #     end = datetime.strptime("2000-01-01 01:23:55.123456", '%Y-%m-%d %H:%M:%S.%f')
+    #
+    #     t = np.linspace(0, 1638.2, 8192) / 1000.0
+    #     g1 = 0.5 * np.cos(t * 2 * np.pi * 6.103) + 1
+    #     p1 = np.cos(t * 2 * np.pi * 100.0) + np.cos(t * 2 * np.pi * 10.0)
+    #
+    #     cavity_data1 = {
+    #         'Time': t,
+    #         'GMES': g1,
+    #         'PMES': p1,
+    #         'IMES': g1 + 1,
+    #         'QMES': p1 + 1,
+    #         'TEST': p1 + 2,
+    #     }
+    #
+    #     for i in range(1000):
+    #         delta = timedelta(minutes=1*i)
+    #         x = Scan(start=start + delta, end=end + delta)
+    #         x.add_cavity_data("c1", data=cavity_data1, sampling_rate=5000)
+    #         x.add_scan_data(float_data={'a': 1.0, "b": 2.0}, str_data={'c': 'on'})
+    #         x.insert_data(TestWaveformDB.db.conn)
