@@ -209,8 +209,6 @@ class TestWaveformDB(unittest.TestCase):
              'wadid': 1, 'name': 'raw', 'data': None},
             {'wid': 1, 'sid': 1, 'cavity': 'c1', 'signal_name': 'GMES', 'sample_rate_hz': 5000.0, 'comment': None,
              'wadid': 2, 'name': 'power_spectrum', 'data': None},
-            {'wid': 1, 'sid': 1, 'cavity': 'c1', 'signal_name': 'GMES', 'sample_rate_hz': 5000.0, 'comment': None,
-             'wadid': 3, 'name': 'frequencies', 'data': None}
         ]
 
         result = TestWaveformDB.db.query_waveform_data(sids=[1, ], signal_names=None, array_names=None)
@@ -230,8 +228,6 @@ class TestWaveformDB(unittest.TestCase):
              'wadid': 1, 'name': 'raw', 'data': None},
             {'wid': 1, 'sid': 1, 'cavity': 'c1', 'signal_name': 'GMES', 'sample_rate_hz': 5000.0, 'comment': None,
              'wadid': 2, 'name': 'power_spectrum', 'data': None},
-            {'wid': 1, 'sid': 1, 'cavity': 'c1', 'signal_name': 'GMES', 'sample_rate_hz': 5000.0, 'comment': None,
-             'wadid': 3, 'name': 'frequencies', 'data': None}
         ]
         result = TestWaveformDB.db.query_waveform_data(sids=[1, ], signal_names=['GMES', ], array_names=None)
 
