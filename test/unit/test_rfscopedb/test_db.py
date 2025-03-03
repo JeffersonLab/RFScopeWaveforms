@@ -7,7 +7,8 @@ import numpy as np
 from rfscopedb.db import QueryFilter
 from rfscopedb.data_model import Scan
 
-dt = datetime.strptime("2020-01-01 01:23:45.123456", '%Y-%m-%d %H:%M:%S.%f')
+scan_start = datetime.strptime("2020-01-01 01:23:45.123456", '%Y-%m-%d %H:%M:%S.%f')
+scan_end = datetime.strptime("2020-01-01 01:23:55.123456", '%Y-%m-%d %H:%M:%S.%f')
 
 
 class TestQueryFilter(unittest.TestCase):
@@ -61,9 +62,10 @@ class TestScan(unittest.TestCase):
 
     def test_scan_creation(self):
         """Test basic construction"""
-        x = Scan(dt=dt)
+        x = Scan(start=scan_start, end=scan_end)
 
-        self.assertEqual(dt, x.dt)
+        self.assertEqual(scan_start, x.start)
+        self.assertEqual(scan_end, x.end)
         self.assertEqual({}, x.waveform_data)
         self.assertEqual({}, x.analysis_array)
         self.assertEqual({}, x.analysis_scalar)
@@ -72,7 +74,7 @@ class TestScan(unittest.TestCase):
 
     def test_add_scan_data(self):
         """Test adding scan data"""
-        x = Scan(dt=dt)
+        x = Scan(start=scan_start, end=scan_end)
 
         float_data = {'a': 11.34, 'b': 12.34, 'c': 12}
         string_data = {'as': 'test1', 'bs': 'test2'}
@@ -86,7 +88,7 @@ class TestScan(unittest.TestCase):
         # pylint: disable=invalid-name
         self.maxDiff = None
 
-        x = Scan(dt=dt)
+        x = Scan(start=scan_start, end=scan_end)
         t = np.linspace(0, 1638.2, 8192) / 1000.0
         gmes = 0.5 * np.cos(t * 2 * np.pi * 6.103) + 1
 
