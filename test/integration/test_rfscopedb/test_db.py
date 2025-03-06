@@ -285,6 +285,11 @@ class TestWaveformDB(unittest.TestCase):
     #
     #     This should only be run for manual review since it takes time, disk, and manual clean up (docker compose down)
     #     """
+    #
+    #     from datetime import timedelta
+    #     import concurrent.futures
+    #     import mysql.connector
+    #
     #     # Pick dates that don't overlap.  On the off chance the test fail to delete these, they shouldn't pollute the
     #     # other tests.
     #     start = datetime.strptime("2000-01-01 01:23:45.123456", '%Y-%m-%d %H:%M:%S.%f')
@@ -294,18 +299,46 @@ class TestWaveformDB(unittest.TestCase):
     #     g1 = 0.5 * np.cos(t * 2 * np.pi * 6.103) + 1
     #     p1 = np.cos(t * 2 * np.pi * 100.0) + np.cos(t * 2 * np.pi * 10.0)
     #
-    #     cavity_data1 = {
+    #     cavity_data = {
     #         'Time': t,
     #         'GMES': g1,
     #         'PMES': p1,
-    #         'IMES': g1 + 1,
-    #         'QMES': p1 + 1,
-    #         'TEST': p1 + 2,
+    #         'IMES': g1 + 1.1,
+    #         'QMES': p1 + 1.1,
+    #         'TEST': p1 + 2.2,
     #     }
     #
-    #     for i in range(1000):
-    #         delta = timedelta(minutes=1*i)
+    #     db_pool = mysql.connector.pooling.MySQLConnectionPool(pool_name="test_pool", pool_size=10, host='localhost',
+    #                                                           user='scope_rw', password='password',
+    #                                                           database='scope_waveforms')
+    #
+    #     def _run_job(idx):
+    #         cd = {}
+    #         for wf in cavity_data:
+    #             if wf == "Time":
+    #                 cd[wf] = cavity_data['Time']
+    #             else:
+    #                 cd[wf] = cavity_data[wf] + np.random.uniform(-0.1, 0.1, len(cavity_data[wf]))
+    #
+    #         b = datetime.now()
+    #         delta = timedelta(minutes=1 * idx)
     #         x = Scan(start=start + delta, end=end + delta)
-    #         x.add_cavity_data("c1", data=cavity_data1, sampling_rate=5000)
+    #         x.add_cavity_data("c1", data=cd, sampling_rate=5000)
     #         x.add_scan_data(float_data={'a': 1.0, "b": 2.0}, str_data={'c': 'on'})
-    #         x.insert_data(TestWaveformDB.db.conn)
+    #         conn = None
+    #         try:
+    #             conn = db_pool.get_connection()
+    #             x.insert_data(conn)
+    #         finally:
+    #             if conn is not None:
+    #                 conn.close()
+    #         e = datetime.now()
+    #
+    #         return idx, (e - b).total_seconds()
+    #
+    #     with concurrent.futures.ThreadPoolExecutor(max_workers=10) as executor:
+    #         futures = []
+    #         for i in range(990):
+    #             futures.append(executor.submit(_run_job, i))
+    #         for future in concurrent.futures.as_completed(futures):
+    #             print(future.result())
